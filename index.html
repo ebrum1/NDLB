@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>No Dog Left Behind - the coverage cube (spinnable)</title>
+<style>
+  html,body{margin:0;padding:0;height:100%;background:#15506E;overflow:hidden;
+            font-family:Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased;}
+  canvas{display:block;width:100vw;height:100vh;touch-action:none;cursor:grab;}
+  body.dragging canvas{cursor:grabbing;}
+  #hint{position:fixed;right:1.2vw;bottom:1.0vh;color:#7FA0B4;font-size:0.95vh;
+        letter-spacing:.06em;opacity:.55;transition:opacity .4s;}
+  body.playing #hint{opacity:0;}
+</style>
+</head>
+<body class="playing">
+<canvas id="c"></canvas>
+<div id="hint">DRAG spin &nbsp;·&nbsp; DOUBLE-CLICK reset view &nbsp;·&nbsp; SPACE pause &nbsp;·&nbsp; &larr; &rarr; step &nbsp;·&nbsp; R restart &nbsp;·&nbsp; F full screen</div>
+<script>
+"use strict";
+/* ==================================================================
+   No Dog Left Behind - the coverage cube.
+   Standalone, offline, loops indefinitely.  Closing slide for
+   WOHC SPI10, Lisbon, 4 September 2026.
+
+   THE CUBE NEVER CHANGES SIZE.  Its three sides ARE the three axes.
+   What moves is the ball inside it.  This mirrors the workshop tool
+   "Rabies 3D coverage tool v3" (model/), whose arithmetic is used
+   verbatim so the two cannot drift apart:
+
+       reach              = min(spatial uniformity, speed, free-roaming)
+       effective immunity = reach x vaccine efficacy
+       reach marker       = (S, T, D)
+       immunity ball      = (S x E, T x E, D x E)
+       elimination zone   = the corner where all three axes >= 85
+       outcome bands      = 70 and 45
+
+   The whole cube glows green only when the immunity ball sits inside
+   that corner: all three axes high AND a long-lasting vaccine.
+   ================================================================== */
+
+var C = {
+  bg:"#15506E", ink:"#FFFFFF", dim:"#A9C4D4", faint:"#3D7189",
+  cream:"#FBEACB", amber:"#E8A33D", ghost:"#2E6B87",
+  green:"#5FA023", greenLt:"#8FCC4E", greenDeep:"#3B6D11",
+  warn:"#C8881C", red:"#E24B4A", redDeep:"#A32D2D"
+};
+var LO = 0.85;                       // the elimination-zone corner, as in the tool
+
+var cv=document.getElementById("c"), ctx=cv.getContext("2d"), W=0,H=0,S=1;
+function resize(){
+  var dpr=Math.min(window.devicePixelRatio||1,2);
+  W=window.innerWidth; H=window.innerHeight;
+  cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  S=Math.min(W/1600,H/900);
+}
+window.addEventListener("resize",resize); resize();
+
+/* ---- the sequence: raise one axis at a time, then the vaccine -------- */
+var SCENES = [
+  { t:8.0, kicker:"COVERAGE IS THREE-DIMENSIONAL",
+    title:"One number cannot describe this.",
+    note:"The cube never changes size.  Its three sides are the three axes.  What moves is where your programme sits inside it.",
+    S:35,T:30,D:28,E:96, hi:-1 },
+
+  { t:8.5, kicker:"RAISE THE FIRST AXIS", hi:0,
+    title:"Spatial uniformity.",
+    note:"Down to the smallest unit with a manager’s name on it.  The ball slides out along one side.  It is nowhere near the corner.",
+    S:95,T:30,D:28,E:96 },
+
+  { t:8.5, kicker:"RAISE THE SECOND AXIS", hi:1,
+    title:"Speed and synchrony.",
+    note:"Fast enough to beat the puppies being born.  Two axes are now high and the ball has travelled a long way, but it is still nowhere near the corner.  The third axis is holding it back.",
+    S:95,T:93,D:28,E:96 },
+
+  { t:9.5, kicker:"RAISE THE THIRD AXIS", hi:2,
+    title:"Free-roaming reach.",
+    note:"The dogs least likely to be brought to you.  Only when the last axis comes up does the ball reach the corner.  Reach is the weakest of the three, so nothing happens until the weakest one moves.",
+    S:95,T:93,D:96,E:96 },
+
+  { t:8.0, kicker:"ALL THREE AXES HIGH", zone:true,
+    title:"The corner.",
+    note:"Every axis high, and a vaccine that works.  The whole cube goes green.",
+    S:95,T:93,D:96,E:96 },
+
+  { t:9.5, kicker:"NOW CHANGE ONLY THE VACCINE", hi:3, warn:true,
+    title:"The reach did not move.",
+    note:"Same three axes, same teams, same campaign.  A short-lived or untested product, and the ball falls straight back down the diagonal.  The glow goes out.",
+    S:95,T:93,D:96,E:33 },
+
+  { t:9.5, kicker:"A THREE-YEAR VACCINE", hi:3,
+    title:"Challenge-tested duration.",
+    note:"Three years of protection from a single dose.  Not an upgrade, a precondition.  The ball returns to the corner and the cube glows again.",
+    S:95,T:93,D:96,E:96 },
+
+  { t:8.0, kicker:"", finale:true, zone:true,
+    title:"No dog left behind.",
+    note:"Three axes high, held there, with a vaccine that lasts.  Anything less and the ball is somewhere else in this cube.",
+    S:95,T:93,D:96,E:96 }
+];
+
+var AXES = [
+  {k:"S", label:"SPATIAL UNIFORMITY"},
+  {k:"T", label:"SPEED & SYNCHRONY"},
+  {k:"D", label:"FREE-ROAMING REACH"}
+];
+
+function outcome(I){
+  if(I>=70) return {c:C.green, label:"Elimination within reach — immunity well above threshold."};
+  if(I>=45) return {c:C.warn,  label:"On the edge — elimination only if sustained and uniform for years."};
+  return {c:C.red, label:"Outbreaks continue — immunity below the threshold."};
+}
+
+var st={S:35,T:30,D:28,E:96,glow:0};
+var idx=0, sceneStart=0, paused=false, tNow=0, started=null;
+function lerp(u,v,k){ return u+(v-u)*k; }
+
+/* ---- projection ------------------------------------------------------ */
+function project(p,yaw,pitch,cx,cy,unit){
+  var x=p[0]-0.5, y=p[1]-0.5, z=p[2]-0.5;      // centre the unit cube on the origin
+  var cs=Math.cos(yaw), sn=Math.sin(yaw);
+  var x1= x*cs + z*sn, z1= -x*sn + z*cs;
+  var cp=Math.cos(pitch), sp=Math.sin(pitch);
+  var y1= y*cp - z1*sp, z2= y*sp + z1*cp;
+  var k = 9.0/(9.0 + z2*0.55);
+  return [cx + x1*unit*k, cy - y1*unit*k, z2];
+}
+function boxAt(a,b,c,d,e,f){
+  return [[a,b,c],[d,b,c],[d,e,c],[a,e,c],[a,b,f],[d,b,f],[d,e,f],[a,e,f]];
+}
+var FACES=[{i:[4,5,6,7],sh:1.00},{i:[1,2,6,5],sh:0.82},{i:[3,2,6,7],sh:1.22},
+           {i:[0,1,2,3],sh:0.62},{i:[0,3,7,4],sh:0.72},{i:[0,1,5,4],sh:0.55}];
+var EDGES=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
+
+function rgba(hex,f,a){
+  var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return "rgba("+Math.round(Math.min(255,r*f))+","+Math.round(Math.min(255,g*f))+","+Math.round(Math.min(255,b*f))+","+a+")";
+}
+function poly(pts,fill,stroke,lw,dash){
+  ctx.save(); if(dash) ctx.setLineDash(dash);
+  ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]);
+  for(var i=1;i<pts.length;i++) ctx.lineTo(pts[i][0],pts[i][1]);
+  ctx.closePath();
+  if(fill){ctx.fillStyle=fill;ctx.fill();}
+  if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw||1;ctx.stroke();}
+  ctx.restore();
+}
+function wire(c,col,lw,dash){
+  ctx.save(); if(dash) ctx.setLineDash(dash);
+  ctx.strokeStyle=col; ctx.lineWidth=lw; ctx.lineCap="round";
+  EDGES.forEach(function(e){
+    ctx.beginPath(); ctx.moveTo(c[e[0]][0],c[e[0]][1]);
+    ctx.lineTo(c[e[1]][0],c[e[1]][1]); ctx.stroke();
+  });
+  ctx.restore();
+}
+
+function drawCube(cx,cy,unit,yaw,pitch,hi){
+  var P=function(p){ return project(p,yaw,pitch,cx,cy,unit); };
+  var s=st.S/100, t=st.T/100, d=st.D/100, e=st.E/100;
+  var reach=Math.min(st.S,st.T,st.D), I=reach*e;
+  var oc=outcome(I);
+  var ball=[s*e, t*e, d*e];                       // the tool's immunity point
+  var inZone = ball[0]>=LO && ball[1]>=LO && ball[2]>=LO;
+  st.glow = lerp(st.glow, inZone?1:0, 0.055);
+  var G = st.glow;
+
+  // bloom behind the cube once it is glowing
+  if(G>0.01 && !window.__noBloom){
+    var g=ctx.createRadialGradient(cx,cy,unit*0.15,cx,cy,unit*2.3);
+    g.addColorStop(0, rgba(C.green,1,0.30*G));
+    g.addColorStop(1, rgba(C.green,1,0));
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  }
+
+  var cube = boxAt(0,0,0,1,1,1).map(P);
+
+  // the six faces of the FIXED cube.  They light up green as the ball
+  // enters the corner; otherwise they are only faintly there.
+  poly([cube[0],cube[1],cube[5],cube[4]], "rgba(255,255,255,0.035)", null, 0);   // the floor
+  if(G>0.01){                                    // on glow, the WHOLE cube fills
+    var order = FACES.map(function(f){
+      return {f:f, z:f.i.reduce(function(a,i){return a+cube[i][2];},0)/4};
+    }).sort(function(a,b){ return b.z-a.z; });
+    order.forEach(function(o){
+      poly(o.f.i.map(function(i){return cube[i];}), rgba(C.green,o.f.sh,0.34*G), null, 0);
+    });
+  }
+
+  // the cube's edges
+  wire(cube, G>0.5 ? rgba(C.greenLt,1,0.45+0.55*G) : rgba(C.ghost,1,0.95),
+       Math.max(1,(1.4+1.4*G)*S), G>0.5?null:[6*S,7*S]);
+
+  // the three axis rails, filled to the current value.  These are the sliders.
+  var rails=[{k:"S",a:[0,0,0],b:[1,0,0],v:s},
+             {k:"T",a:[0,0,0],b:[0,1,0],v:t},
+             {k:"D",a:[0,0,0],b:[0,0,1],v:d}];
+  rails.forEach(function(R,i){
+    var A=P(R.a), Bp=P(R.b);
+    var mid=[R.a[0]+(R.b[0]-R.a[0])*R.v, R.a[1]+(R.b[1]-R.a[1])*R.v, R.a[2]+(R.b[2]-R.a[2])*R.v];
+    var M=P(mid);
+    ctx.beginPath(); ctx.moveTo(A[0],A[1]); ctx.lineTo(Bp[0],Bp[1]);
+    ctx.strokeStyle=rgba(C.dim,1,0.22); ctx.lineWidth=Math.max(1,5*S); ctx.lineCap="round"; ctx.stroke();
+    var hot = (hi===i);
+    ctx.beginPath(); ctx.moveTo(A[0],A[1]); ctx.lineTo(M[0],M[1]);
+    ctx.strokeStyle = hot ? C.cream : rgba(C.green,1.35,0.85);
+    ctx.lineWidth=Math.max(1,(hot?7:5)*S); ctx.stroke();
+    ctx.beginPath(); ctx.arc(M[0],M[1],(hot?8:5.5)*S,0,6.2832);
+    ctx.fillStyle = hot ? C.cream : rgba(C.green,1.35,0.95); ctx.fill();
+  });
+
+  // the elimination zone in the far corner
+  var ez=boxAt(LO,LO,LO,1,1,1).map(P);
+  var ezOrder=FACES.map(function(f){
+    return {f:f, z:f.i.reduce(function(a,i){return a+ez[i][2];},0)/4};
+  }).sort(function(a,b){ return b.z-a.z; });
+  ezOrder.forEach(function(o){
+    poly(o.f.i.map(function(i){return ez[i];}), rgba(C.green,o.f.sh,0.10+0.34*G), null, 0);
+  });
+  wire(ez, rgba(C.green,1.2,0.55+0.45*G), Math.max(1,(1.3+0.9*G)*S));
+
+  // the diagonal from the origin corner to the far corner
+  var o0=P([0,0,0]), o1=P([1,1,1]);
+  ctx.save(); ctx.setLineDash([4*S,8*S]);
+  ctx.beginPath(); ctx.moveTo(o0[0],o0[1]); ctx.lineTo(o1[0],o1[1]);
+  ctx.strokeStyle=rgba(C.dim,1,0.20); ctx.lineWidth=Math.max(1,1.2*S); ctx.stroke();
+  ctx.restore();
+
+  // the reach marker (where the teams got) and the immunity ball
+  var PR=P([s,t,d]), PB=P(ball);
+  ctx.save(); ctx.setLineDash([3*S,5*S]);
+  ctx.beginPath(); ctx.moveTo(PR[0],PR[1]); ctx.lineTo(PB[0],PB[1]);
+  ctx.strokeStyle=rgba(C.dim,1,0.55); ctx.lineWidth=Math.max(1,1.6*S); ctx.stroke();
+  ctx.restore();
+
+  var sep=Math.hypot(PR[0]-PB[0],PR[1]-PB[1]);
+  ctx.beginPath(); ctx.arc(PR[0],PR[1],9*S,0,6.2832);
+  ctx.strokeStyle=rgba(C.dim,1,0.85); ctx.lineWidth=Math.max(1,2.4*S); ctx.stroke();
+  ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.font="bold "+Math.round(11.5*S)+"px Arial, Helvetica, sans-serif";
+  if(sep > 46*S){   // otherwise the two labels sit on top of each other
+    ctx.fillStyle=rgba(C.dim,1,0.85); ctx.fillText("reach", PR[0], PR[1]-20*S);
+  }
+
+  var pulse = 1 + 0.06*Math.sin(tNow*2.6);
+  var br = 17*S*pulse;
+  var bg2=ctx.createRadialGradient(PB[0]-br*0.3,PB[1]-br*0.35,br*0.1,PB[0],PB[1],br);
+  bg2.addColorStop(0, rgba(oc.c,1.55,1)); bg2.addColorStop(1, rgba(oc.c,0.75,1));
+  ctx.beginPath(); ctx.arc(PB[0],PB[1],br,0,6.2832);
+  ctx.fillStyle=bg2; ctx.fill();
+  ctx.strokeStyle=rgba(oc.c,1.6,0.95); ctx.lineWidth=Math.max(1,2*S); ctx.stroke();
+  ctx.font="bold "+Math.round(12.5*S)+"px Arial, Helvetica, sans-serif";
+  ctx.fillStyle=oc.c;
+  ctx.fillText(sep > 46*S ? "effective immunity" : "reach  ·  effective immunity", PB[0], PB[1]+br+26*S);
+
+  // axis names on the three rails
+  var anchors={S:[1.20,-0.10,0], T:[-0.16,1.14,0], D:[-0.10,-0.10,1.22]};
+  AXES.forEach(function(A,i){
+    var q=P(anchors[A.k]);
+    var hot=(hi===i);
+    ctx.font="bold "+Math.round((12.5+(hot?2:0))*S)+"px Arial, Helvetica, sans-serif";
+    ctx.fillStyle = hot ? C.cream : rgba(C.dim,1,0.9);
+    ctx.fillText(A.label+"  "+Math.round(st[A.k])+"%", q[0], q[1]);
+  });
+
+  return {reach:reach, I:I, oc:oc, inZone:inZone, G:G};
+}
+
+/* ---- the four sliders on the left, mirroring the workshop tool -------- */
+function sliders(x,y,w,hi){
+  var rows=[{k:"S",n:"Spatial uniformity"},{k:"T",n:"Speed & synchrony"},
+            {k:"D",n:"Free-roaming reach"},{k:"E",n:"Vaccine efficacy & duration"}];
+  ctx.textBaseline="alphabetic";
+  rows.forEach(function(R,i){
+    var yy=y+i*52*S, hot=(hi===i), v=st[R.k]/100;
+    ctx.textAlign="left";
+    ctx.font=(hot?"bold ":"")+Math.round(13.5*S)+"px Arial, Helvetica, sans-serif";
+    ctx.fillStyle = hot ? C.cream : rgba(C.dim,1,0.85);
+    ctx.fillText(R.n, x, yy);
+    ctx.textAlign="right";
+    ctx.font="bold "+Math.round(14*S)+"px Arial, Helvetica, sans-serif";
+    ctx.fillStyle = hot ? C.cream : C.ink;
+    ctx.fillText(Math.round(st[R.k])+"%", x+w, yy);
+    var ty=yy+12*S, th=8*S;
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x,ty,w,th,th/2)
+                                   : ctx.rect(x,ty,w,th);
+    ctx.fillStyle="rgba(255,255,255,0.10)"; ctx.fill();
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x,ty,Math.max(th,w*v),th,th/2)
+                                   : ctx.rect(x,ty,w*v,th);
+    ctx.fillStyle = R.k==="E" ? rgba(C.amber,1,0.95) : rgba(C.green,1.3,0.95);
+    ctx.fill();
+    ctx.beginPath(); ctx.arc(x+w*v, ty+th/2, (hot?9:6.5)*S, 0, 6.2832);
+    ctx.fillStyle = hot ? C.cream : "#FFFFFF"; ctx.fill();
+  });
+}
+
+function wrap(text,maxW){
+  var w=text.split(" "), lines=[], cur="";
+  for(var i=0;i<w.length;i++){
+    var tr=cur?cur+" "+w[i]:w[i];
+    if(ctx.measureText(tr).width>maxW && cur){ lines.push(cur); cur=w[i]; } else cur=tr;
+  }
+  if(cur) lines.push(cur);
+  return lines;
+}
+
+function draw(){
+  var sc=SCENES[idx], since=tNow-sceneStart;
+  var alpha=Math.min(1,since/0.7)*Math.min(1,Math.max(0,(sc.t-since)/0.5));
+
+  st.S=lerp(st.S,sc.S,0.055); st.T=lerp(st.T,sc.T,0.055);
+  st.D=lerp(st.D,sc.D,0.055); st.E=lerp(st.E,sc.E,0.055);
+
+  ctx.fillStyle=C.bg; ctx.fillRect(0,0,W,H);
+
+  var cx=W*0.715, cy=H*0.50, unit=Math.min(W*0.215,H*0.36);
+  // free spin: coast on the released velocity, then let the idle sway fade back in
+  if(!view.drag){
+    view.yaw+=view.vy; view.pitch=clampPitch(view.pitch+view.vp);
+    view.vy*=0.94; view.vp*=0.94;
+    if(Math.abs(view.vy)<0.00004) view.vy=0;
+    if(Math.abs(view.vp)<0.00004) view.vp=0;
+  }
+  var swayTarget=(view.drag||view.vy||view.vp)?0:1;
+  view.sway+= (swayTarget-view.sway)*(swayTarget<view.sway?0.2:0.008);
+  var yaw=view.yaw+view.sway*0.055*Math.sin(tNow*0.19),
+      pitch=clampPitch(view.pitch+view.sway*0.035*Math.sin(tNow*0.15+1.1));
+  var hi = (sc.hi===undefined) ? -1 : sc.hi;
+  var res=drawCube(cx,cy,unit,yaw,pitch,hi);
+
+  if(window.__cubeOnly) return;
+
+  var lx=W*0.068, maxW=W*0.40;
+
+  if(sc.kicker){
+    ctx.textAlign="left"; ctx.textBaseline="alphabetic";
+    ctx.font="bold "+Math.round(14*S)+"px Arial, Helvetica, sans-serif";
+    ctx.fillStyle = sc.warn ? "rgba(226,75,74,"+alpha+")" : "rgba(232,163,61,"+alpha+")";
+    ctx.fillText(sc.kicker.split("").join(" "), lx, H*0.135);
+  }
+  ctx.textAlign="left";
+  var hs = sc.finale?50:38;
+  ctx.font="bold "+Math.round(hs*S)+"px Arial, Helvetica, sans-serif";
+  ctx.fillStyle="rgba(255,255,255,"+alpha+")";
+  var hl=wrap(sc.title,maxW), hy=H*0.135+48*S;
+  hl.forEach(function(l,i){ ctx.fillText(l,lx,hy+i*hs*1.16*S); });
+
+  ctx.font=Math.round(16.5*S)+"px Arial, Helvetica, sans-serif";
+  ctx.fillStyle="rgba(169,196,212,"+alpha+")";
+  var sy=hy+hl.length*hs*1.16*S+24*S;
+  var nl=wrap(sc.note,maxW);
+  nl.forEach(function(l,i){ ctx.fillText(l,lx,sy+i*25*S); });
+
+  sliders(lx, sy+nl.length*25*S+42*S, maxW*0.86, hi);
+
+  // reach / immunity readout and the outcome band
+  var ry=H*0.795;
+  ctx.textAlign="left"; ctx.textBaseline="alphabetic";
+  ctx.font="bold "+Math.round(11.5*S)+"px Arial, Helvetica, sans-serif";
+  ctx.fillStyle=rgba(C.dim,1,0.9);
+  ctx.fillText("R E A C H   ( W E A K E S T   A X I S )", lx, ry);
+  ctx.fillText("E F F E C T I V E   I M M U N I T Y", lx+maxW*0.46, ry);
+  ctx.font="bold "+Math.round(38*S)+"px Arial, Helvetica, sans-serif";
+  ctx.fillStyle=C.ink; ctx.fillText(Math.round(res.reach)+"%", lx, ry+40*S);
+  ctx.fillStyle=res.oc.c; ctx.fillText(Math.round(res.I)+"%", lx+maxW*0.46, ry+40*S);
+
+  ctx.font="bold "+Math.round(14.5*S)+"px Arial, Helvetica, sans-serif";
+  ctx.fillStyle=res.oc.c;
+  wrap(res.oc.label,maxW).forEach(function(l,i){ ctx.fillText(l, lx, ry+68*S+i*20*S); });
+
+  ctx.font="italic "+Math.round(12*S)+"px Arial, Helvetica, sans-serif";
+  ctx.fillStyle="rgba(127,160,180,0.75)";
+  ctx.fillText("The cube never changes size; only the ball moves.  Arithmetic follows the workshop tool.  A teaching heuristic, not a model of elimination probability.",
+               lx, H-30*S);
+
+  var tw=10*S, tg=6*S, tx=W-(SCENES.length*(tw+tg))-24*S, ty=H-34*S;
+  for(var j=0;j<SCENES.length;j++){
+    ctx.fillStyle=(j===idx)?C.cream:(j<idx?C.ghost:"rgba(46,107,135,0.45)");
+    ctx.fillRect(tx+j*(tw+tg),ty,tw,4*S);
+  }
+}
+
+function frame(ts){
+  if(started===null) started=ts;
+  if(!paused){
+    tNow=(ts-started)/1000;
+    if(tNow-sceneStart>=SCENES[idx].t){ sceneStart=tNow; idx=(idx+1)%SCENES.length; }
+  }
+  draw();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+function step(d){
+  idx=(idx+d+SCENES.length)%SCENES.length; sceneStart=tNow;
+  var s=SCENES[idx];
+  st.S=lerp(st.S,s.S,.6); st.T=lerp(st.T,s.T,.6);
+  st.D=lerp(st.D,s.D,.6); st.E=lerp(st.E,s.E,.6);
+}
+document.addEventListener("keydown",function(e){
+  if(e.key===" "){ e.preventDefault(); paused=!paused; document.body.classList.toggle("playing",!paused); }
+  else if(e.key==="ArrowRight"){ e.preventDefault(); step(1); }
+  else if(e.key==="ArrowLeft"){ e.preventDefault(); step(-1); }
+  else if(e.key==="r"||e.key==="R"){ idx=0; sceneStart=tNow; }
+  else if(e.key==="f"||e.key==="F"){
+    if(document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();
+  }
+});
+document.addEventListener("mousemove",function(){
+  document.body.classList.remove("playing");
+  clearTimeout(window.__h);
+  window.__h=setTimeout(function(){ document.body.classList.add("playing"); },2500);
+});
+
+/* ---- free spin: hold the left button and drag to orbit the cube ------- */
+var view={yaw:0.72,pitch:0.34,vy:0,vp:0,drag:false,px:0,py:0,sway:1};
+window.__view=view;
+function clampPitch(p){ return Math.max(-1.45,Math.min(1.45,p)); }
+cv.addEventListener("pointerdown",function(e){
+  if(e.button!==0) return;
+  view.drag=true; view.px=e.clientX; view.py=e.clientY; view.vy=0; view.vp=0;
+  document.body.classList.add("dragging");
+  if(cv.setPointerCapture){ try{ cv.setPointerCapture(e.pointerId); }catch(_){ } }
+  e.preventDefault();
+});
+window.addEventListener("pointermove",function(e){
+  if(!view.drag) return;
+  var k=0.0062, dx=(e.clientX-view.px)*k, dy=(e.clientY-view.py)*k;
+  view.px=e.clientX; view.py=e.clientY;
+  view.yaw-=dx; view.pitch=clampPitch(view.pitch-dy);      // the near face follows the pointer
+  view.vy=0.65*view.vy-0.35*dx; view.vp=0.65*view.vp-0.35*dy;
+  var cap=0.06;
+  view.vy=Math.max(-cap,Math.min(cap,view.vy)); view.vp=Math.max(-cap,Math.min(cap,view.vp));
+});
+function endDrag(){ view.drag=false; document.body.classList.remove("dragging"); }
+window.addEventListener("pointerup",endDrag);
+window.addEventListener("pointercancel",endDrag);
+cv.addEventListener("dblclick",function(){ view.yaw=0.72; view.pitch=0.34; view.vy=0; view.vp=0; });
+</script>
+</body>
+</html>
