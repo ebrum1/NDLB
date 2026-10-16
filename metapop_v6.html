@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Metapopulation model v6 &#8211; No Dog Left Behind</title>
+<style>
+  :root{--bg:#fff;--panel:#f7f8f5;--ink:#1d2520;--muted:#5f6b64;--line:#e4e3da;--navy:#15506e;--green:#5fa023;--amber:#c8881c;--red:#e24b4a;--accent-soft:#eaf0f3;
+        --t0:#7f9db5;--t1:#d29a3c;--t2:#b5523b;--t3:#97b86f;}
+  .dark{--bg:#14181b;--panel:#1c2226;--ink:#eef2ef;--muted:#9aa39c;--line:#2c343a;--navy:#4aa6cc;--accent-soft:#1b2d36;
+        --t0:#8fb0c9;--t1:#e0ab52;--t2:#d0705a;--t3:#a9c983;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);line-height:1.5;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1060px;margin:0 auto;padding:22px;}
+  h1{font-size:24px;margin:0 0 3px;color:var(--navy);font-weight:700;}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 4px;}
+  .topbar{display:flex;justify-content:flex-end;margin-bottom:2px;}
+  .tbtn{background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:6px 11px;font:inherit;font-size:13px;cursor:pointer;}
+  .tbtn:hover{background:var(--panel);}
+  .grid{display:grid;gap:14px;margin-top:14px;grid-template-columns:1fr 1fr;}
+  @media(max-width:840px){.grid{grid-template-columns:1fr;}}
+  .col{display:flex;flex-direction:column;gap:14px;min-width:0;}
+  .card{background:var(--panel);border-radius:11px;padding:14px 16px;min-width:0;}
+  .card h2{font-size:15px;margin:0 0 4px;color:var(--navy);}
+  .card .note{font-size:12px;color:var(--muted);margin:0 0 10px;}
+  .sect{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--navy);margin:14px 0 4px;padding-top:8px;border-top:1px solid var(--line);}
+  .sect.first{border-top:none;padding-top:0;margin-top:6px;}
+  .row{display:flex;align-items:center;gap:10px;margin:7px 0;}
+  .row label{width:200px;flex:none;font-size:13px;color:var(--muted);}
+  @media(max-width:480px){.row label{width:130px;}}
+  input[type=range]{flex:1;min-width:0;accent-color:var(--navy);}
+  input[type=range]:disabled{opacity:.35;}
+  .val{width:64px;flex:none;text-align:right;font-size:13px;font-weight:600;color:var(--ink);}
+  button{font:inherit;font-size:13px;padding:6px 11px;cursor:pointer;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);}
+  button:hover{background:var(--line);}
+  button.on{background:var(--navy);color:#fff;border-color:var(--navy);}
+  .presets{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:6px;}
+  .setup{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:2px 0 6px;font-size:13px;color:var(--muted);}
+  input[type=number],input[type=text],select{font:inherit;font-size:13px;padding:5px 7px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);}
+  .setup input[type=number]{width:74px;}
+  .setup input[type=text]{width:112px;}
+  .costin{width:96px;}
+  .setup .nlab{color:var(--ink);font-weight:600;}
+  .chk{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--ink);margin:8px 0 2px;}
+  .chk input{margin-top:3px;}
+  .axisval{font-size:28px;font-weight:700;line-height:1.05;}
+  .axisunit{font-size:12.5px;color:var(--muted);font-weight:400;}
+  .scores{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start;margin-top:4px;}
+  .score{min-width:132px;flex:1 1 132px;}
+  .score.wide{flex:2 1 250px;}
+  .score .lab{font-size:12px;color:var(--muted);}
+  .subhead{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--navy);margin:16px 0 2px;padding-top:10px;border-top:1px solid var(--line);}
+  .verdict{margin-top:12px;border-radius:10px;padding:11px 14px;font-size:15px;font-weight:600;}
+  .maps{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;}
+  @media(max-width:840px){.maps{grid-template-columns:1fr;}}
+  .legend{font-size:11.5px;color:var(--muted);margin-top:6px;display:flex;gap:12px;flex-wrap:wrap;}
+  .sw{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:4px;}
+  .hint{font-size:11.5px;color:var(--muted);margin-top:5px;}
+  svg{width:100%;height:auto;}
+  table.ct{border-collapse:collapse;width:100%;font-size:12.5px;margin-top:10px;}
+  table.ct th{text-align:right;font-weight:600;color:var(--muted);padding:5px 6px;border-bottom:1px solid var(--line);font-size:11.5px;}
+  table.ct td{text-align:right;padding:5px 6px;border-bottom:1px solid var(--line);}
+  table.ct th:first-child,table.ct td:first-child{text-align:left;}
+  table.ct tr.tot td{font-weight:700;border-bottom:none;}
+  .tblwrap{overflow-x:auto;}
+  table.dogs{border-collapse:collapse;width:100%;font-size:12.5px;margin-top:8px;}
+  table.dogs th{text-align:left;font-weight:600;color:var(--muted);font-size:11.5px;padding:4px 5px;border-bottom:1px solid var(--line);}
+  table.dogs td{padding:5px 5px;border-bottom:1px solid var(--line);vertical-align:top;}
+  table.dogs td.n{text-align:right;white-space:nowrap;font-weight:600;}
+  details{margin-top:6px;font-size:13px;}
+  details summary{cursor:pointer;color:var(--navy);font-weight:600;}
+  details .row label{width:250px;}
+  @media(max-width:480px){details .row label{width:150px;}}
+  footer{margin-top:18px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:10px;}
+  footer b{color:var(--ink);}
+  footer ul{margin:4px 0 8px 18px;padding:0;}
+  .cell{cursor:pointer;}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:4px 0 8px;}
+  .seg button{border:none;border-radius:0;background:transparent;color:var(--muted);padding:5px 11px;}
+  .seg button+button{border-left:1px solid var(--line);}
+  .seg button.on{background:var(--navy);color:#fff;}
+  #mapNote{min-height:4.5em;}
+  .cell:hover{stroke:var(--navy);stroke-width:2;}
+  .facil{display:none !important;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar"><button class="tbtn" id="themeBtn" onclick="toggleTheme()">Dark mode</button></div>
+  <h1>Metapopulation rabies elimination model <span style="font-size:15px;font-weight:600;color:var(--muted)">v6, course edition</span></h1>
+  <p class="sub">No Dog Left Behind &#8211; which dogs, and at what cost.  A country is many districts, and the country is free only when <b>every</b> district reaches zero at the same time.  Inside each district, what counts is whether the vaccine reaches the dogs that carry transmission, the dogs on the street, not how many dogs are counted.</p>
+
+  <div class="presets" id="presets"></div>
+
+  <div class="setup">
+    <span class="nlab">Subpopulations</span>
+    <input type="number" id="ndist" min="4" max="400" step="1">
+    <button onclick="quickN(25)">25 districts</button>
+    <button onclick="quickN(331)">331 DS divisions</button>
+    <button onclick="clearGaps()">Clear gaps</button>
+    <span class="nlab" style="margin-left:10px;">Dog population</span>
+    <input type="text" id="dogPop" inputmode="numeric">
+    <span id="setupNote"></span>
+  </div>
+
+  <div class="grid">
+    <div class="col">
+      <div class="card">
+        <h2>The country <span class="axisunit">(click a district to make it refuse vaccination)</span></h2>
+        <div class="seg" role="group" aria-label="What the map shows"><button type="button" id="mapCovBtn" class="on" onclick="setMapMode('cov')">Reported coverage</button><button type="button" id="mapImmBtn" onclick="setMapMode('imm')">Effective immunity</button></div>
+        <p class="note" id="mapNote"></p>
+        <div id="covmap"></div>
+        <div class="legend" id="mapLegend"></div>
+        <div class="hint" id="covNote"></div>
+        <div class="hint" id="surgeNote"></div>
+      </div>
+      <div class="card">
+        <h2>Who the dogs are <span class="axisunit">(built in: Sri Lanka)</span></h2>
+        <p class="note">A dog's weight in transmission rises with the square of how much it roams, because a roaming dog is both more likely to be bitten and more likely to bite.  So the dogs on the street carry far more transmission than their numbers suggest.</p>
+        <div id="dogbars"></div>
+        <table class="dogs" id="dogtable"></table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Levers</h2>
+      <div class="sect first">Vaccination programme</div>
+      <div class="row"><label>Door-to-door: households visited</label><input type="range" id="d2dHH" min="0" max="100" step="5"><span class="val" id="d2dHHV"></span></div>
+      <div class="chk"><input type="checkbox" id="chSweep"><label for="chSweep">Sweeping teams: catch, vaccinate, collar and release dogs on the street</label></div>
+      <div class="row"><label>Sweeping team productivity</label><input type="range" id="sweepProd" min="30" max="200" step="5"><span class="val" id="sweepProdV"></span></div>
+      <div class="hint" id="effortNote"></div>
+      <div class="row"><label>Oral bait</label><select id="orvFrom"><option value="0">Off</option><option value="1">From round 1</option><option value="2">From round 2</option><option value="3">From round 3</option></select></div>
+      <div class="chk"><input type="checkbox" id="collars"><label for="collars">Long-lasting collars on every dog vaccinated by injection</label></div>
+      <div class="chk"><input type="checkbox" id="pups"><label for="pups">Puppies vaccinated from two weeks of age</label></div>
+
+      <div class="sect">Gaps</div>
+      <div class="row"><label>Gap coverage</label><input type="range" id="gapCov" min="0" max="60" step="1"><span class="val" id="gapCovV"></span></div>
+      <div class="hint">A refusing district refuses every channel.  Each round its coverage is whatever this lever states, spread at random over all its dogs.  Click a district on the map to make one.</div>
+      <div class="chk"><input type="checkbox" id="surge"><label for="surge">Surge the gaps &#8211; send mobile A-teams to bring every gap district up to the full programme</label></div>
+      <div class="row"><label>Surge starts in year</label><input type="range" id="surgeYr" min="1" max="8" step="1" value="1"><span class="val" id="surgeYrV"></span></div>
+
+      <div class="sect">Epidemiology</div>
+      <div class="row"><label>Vaccine efficacy</label><input type="range" id="eff" min="0" max="95" step="1"><span class="val" id="effV"></span></div>
+      <div class="hint">The share of vaccinated dogs a dose protects, from 0% (a placebo: delivered, paid for and reported like any vaccine, and protecting no dog) to 95% (a good vaccine in the field).</div>
+      <div class="row"><label>Protection duration</label><input type="range" id="dur" min="0.5" max="5" step="0.5"><span class="val" id="durV"></span></div>
+      <div class="row"><label>Campaign interval</label><input type="range" id="intv" min="0.5" max="2" step="0.5"><span class="val" id="intvV"></span></div>
+      <div class="row"><label>District campaign length</label><input type="range" id="campwk" min="1" max="26" step="1"><span class="val" id="campwkV"></span></div>
+      <div class="row"><label>Overall campaign length</label><input type="range" id="roll" min="1" max="104" step="1"><span class="val" id="rollV"></span></div>
+      <div class="hint">Overall length is the time to vaccinate every district, bounded by one district's length (fully synchronous) and the campaign interval.  A longer rollout leaves the last districts unvaccinated while the first are finished, so they re-seed the done ones.</div>
+      <div class="row"><label>Re-seeding between districts</label><input type="range" id="rho" min="0" max="40" step="1"><span class="val" id="rhoV"></span></div>
+      <div class="row"><label>Population turnover (/yr)</label><input type="range" id="turn" min="20" max="70" step="1"><span class="val" id="turnV"></span></div>
+      <div class="row"><label>R<sub>0</sub></label><input type="range" id="r0" min="100" max="250" step="5"><span class="val" id="r0V"></span></div>
+      <div class="row facil"><label>Waning shape</label><input type="range" id="wan" min="0" max="3" step="1"><span class="val" id="wanV"></span></div>
+      <div class="hint facil">How protection is lost, at the same mean duration.  Exponential is a constant hazard; a step vaccine protects for its stated duration and then stops.  The truth lies between them.</div>
+      <div class="row facil"><label>Stochastic runs</label><input type="range" id="runs" min="40" max="600" step="20"><span class="val" id="runsV"></span></div>
+      <div class="row facil"><label>Random seed</label><input type="number" class="costin" id="seedIn" min="1" step="1" value="12345"><button type="button" onclick="newSeed()">New seed</button></div>
+
+      <div class="sect">Costs</div>
+      <div class="row"><label>Currency</label><select id="cur"><option value="USD">US$</option><option value="GBP">&#163; sterling</option><option value="LKR">Sri Lankan rupees</option></select></div>
+      <details id="costBox"><summary>Unit costs (r18 Sri Lanka budget) &#8211; edit to use your own</summary>
+        <div class="row"><label>Vaccine dose, with syringe, certificate, disposal and 10% wastage</label><input type="number" class="costin" id="c_vac" min="0" step="0.01"></div>
+        <div class="row"><label>Long-lasting collar</label><input type="number" class="costin" id="c_collar" min="0" step="0.01"></div>
+        <div class="row"><label>Door-to-door delivery, per dog</label><input type="number" class="costin" id="c_d2dDel" min="0" step="0.01"></div>
+        <div class="row"><label>Sweeping team-day, all in</label><input type="number" class="costin" id="c_sweepTD" min="0" step="0.01"></div>
+        <div class="row"><label>Oral bait offered, with distribution</label><input type="number" class="costin" id="c_bait" min="0" step="0.01"></div>
+        <div class="hint" id="rateNote"></div>
+        <button type="button" onclick="resetCosts()" style="margin-top:6px;">Reset to the budget</button>
+      </details>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px;">
+    <div class="scores">
+      <div class="score"><div class="lab">Country elimination probability</div><div class="axisval" id="sElim">&#8211;</div><div class="lab" id="sElimH"></div></div>
+      <div class="score"><div class="lab">Time to elimination, 4 runs in 5</div><div class="axisval" id="sTime">&#8211;</div><div class="lab" id="sTimeH"></div></div>
+      <div class="score"><div class="lab">Expected cost, all runs</div><div class="axisval" id="sXCost">&#8211;</div><div class="lab" id="sXCostH"></div></div>
+      <div class="score"><div class="lab">Mean cost, runs that eliminated</div><div class="axisval" id="sCost">&#8211;</div><div class="lab" id="sCostH"></div></div>
+      <div class="score"><div class="lab">Cost per round, whole country</div><div class="axisval" id="sRound">&#8211;</div><div class="lab" id="sRoundH"></div></div>
+      <div class="score"><div class="lab">Gap districts</div><div class="axisval" id="sGaps">&#8211;</div></div>
+      <div class="score"><div class="lab">Districts still infected at horizon</div><div class="axisval" id="sRes">&#8211;</div></div>
+    </div>
+    <div class="subhead">One round, once the programme has settled, in a fully served district</div>
+    <div class="scores">
+      <div class="score"><div class="lab">Coverage, all dogs</div><div class="axisval" id="sCov">&#8211;</div><div class="lab" id="sCovH"></div></div>
+      <div class="score"><div class="lab">Street dogs reached</div><div class="axisval" id="sRoam">&#8211;</div><div class="lab" id="sRoamH"></div></div>
+      <div class="score wide"><div class="lab">Effective immunity, just before the round &#8594; just after it</div><div class="axisval" id="sEff">&#8211;</div><div id="gauge"></div><div class="lab" id="sEffH"></div></div>
+      <div class="score"><div class="lab">Sweeping: new dogs per team-day achieved</div><div class="axisval" id="sProd">&#8211;</div><div class="lab" id="sProdH"></div></div>
+    </div>
+    <div class="tblwrap"><table class="ct" id="chanTable"></table></div>
+    <div class="hint">Effective immunity counts each vaccinated dog by its weight in transmission, after vaccine efficacy.  "Effective immunity added" is how much one settled round of each channel raises it.  Dogs still protected from the last round gain nothing from another dose, so together the channels add the rise from before the round to after it, less the protection lost while the campaign runs, which grows with the campaign length.  Delivery order: door-to-door, then sweeping on the street dogs still not done, then oral bait on what remains.</div>
+    <div class="verdict" id="verdict"></div>
+  </div>
+
+  <div class="maps">
+    <div class="card">
+      <h2>Where the virus persists <span class="axisunit">(end of the 12-year horizon)</span></h2>
+      <p class="note">Share of model runs in which each district still has rabies at the end.  A gap is a reservoir, and the stain spreads to its neighbours.</p>
+      <div id="outmap"></div>
+      <div class="legend">
+        <span><span class="sw" style="background:var(--green)"></span>cleared</span>
+        <span><span class="sw" style="background:var(--amber)"></span>re-seeded intermittently</span>
+        <span><span class="sw" style="background:var(--red)"></span>persistent reservoir</span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Active rabies cases &#8211; whole country</h2>
+      <p class="note">Total cases across all districts, log scale.  The thick line is the median of the runs; thin lines are individual runs.  It either falls to zero or settles onto a plateau that the gaps keep feeding.</p>
+      <div id="serieschart"></div>
+    </div>
+  </div>
+
+  <footer>
+    <p><b>What is new in v6.</b>  Each round is now spread evenly over the district campaign weeks: every week the teams cover a fresh share of the district.  Before, most of a round's protection landed in its first week or two.  Vaccine efficacy runs from 0%, a placebo, to 95%, a good vaccine in the field.  Static vaccination points are left out until their effect has been checked against the advanced model.</p>
+    <p><b>What v5.1 added.</b>  The country map switches between reported coverage, which is what a campaign report shows, and effective immunity, which is what the dogs have just after a settled round.  The two agree only when the vaccine works and the street dogs are reached.  Vaccine efficacy can be set down to 0%, a placebo that is delivered, paid for and reported like any vaccine.</p>
+    <p><b>What v5 added.</b>  v5 keeps v4's engine and asks one more question: which dogs do the doses reach, and at what cost?  Each district now holds six kinds of dog, built in from the advanced model's Sri Lanka dog population and grouped here into the A-team tiers.  Each channel reaches some kinds of dog and not others, and it reaches the same dogs every round.  Door-to-door reaches household dogs and many owned roaming dogs; a street sweep meets the roaming dogs and catches most of them; oral bait reaches many of the wary dogs that teams struggle to catch.  Coverage is now an output of the programme you choose, not a number you type in.  R<sub>0</sub> defaults to 1.8, a deliberately pessimistic planning value.</p>
+    <p><b>Why street dogs count most.</b>  A dog's weight in transmission rises with the square of how much it roams.  We assume proportionate mixing: a rabid dog's bites fall on household and street dogs in proportion to how active each group is, so about two-thirds land on street dogs.  Under that assumption a district's R is exactly R<sub>0</sub> &#215; (1 &#8722; effective immunity), where effective immunity weights each vaccinated dog by its share of transmission.  The 44% of dogs on the street carry 80% of transmission, and a confined dog counts for a four-hundredth of an unowned one.  Coverage counts every dog the same, so a programme can report high coverage and still leave the street dogs, and R, almost untouched.</p>
+    <p><b>Sweeping productivity.</b>  Sweeping effort is fixed at 3.1 team-days per 1,000 dogs a round, the sweeping establishment in the r18 Sri Lanka budget as it stands in the Sri Lanka room (67% door-to-door, 33% sweeping: 7,838 team-days a round for 2.5 million dogs).  The lever is how many dogs a team vaccinates in a day at the start of a sweep.  Teams slow down as the easy dogs are done and the wary ones are left, and with collars they stop when every dog they can meet wears one.  Without collars a team cannot tell a vaccinated dog from an unvaccinated one, so part of its effort and its vaccine goes on dogs already done: dogs vaccinated at the door, and dogs the sweep itself has already caught.  Bait teams without collars likewise offer baits to dogs that are already vaccinated.  Because effort is fixed, dropping collars can push a programme close to the threshold, and the cost penalty is then large; where more effort could be bought to compensate, it would be smaller.</p>
+    <p><b>Costs.</b>  Door-to-door and sweeping unit costs come from the r18 Sri Lanka budget as it stands in the Sri Lanka room (17 September 2026 export), recurring items at year-1 prices, with the biohazard box corrected to LKR 1,000 per box of 300 doses.  Door-to-door delivery is an average at the budget's volume and includes the VS coordinators.  The room has no oral bait, so the bait cost (LKR 2,500 a bait, unsourced, plus wastage and distribution) comes from the 16 September version.  Costs cover delivery only: vaccine, collars, door-to-door and sweeping teams, and baits.  Training, surveillance, programme management beyond the coordinators, and sterilisation stay in the budget calculator.  Each run pays for every round it needs up to the year it eliminates; runs that never eliminate pay for every round inside the 12-year horizon.  Exchange rates: US$1 = LKR 330.76 = &#163;0.7555, 15 October 2026.</p>
+    <p><b>How it works.</b>  Campaigns lift an immune saw-tooth for each kind of dog in each district: annual by default, with each round spread evenly over the district campaign length, and rolled out across districts over the overall campaign length.  A district's R follows the effective immunity, and the infection is a stochastic branching process stepped once per &#8776;7-week rabies generation.  Immunity falls between rounds as dogs die and are replaced and protection wanes, so it is lower just before the next round.  A few weeks below the threshold does little harm if the next round arrives on time; immunity that stays below it lets rabies re-establish.  Districts are coupled on a nearest-neighbour grid; the coupled share of a district's infectious pressure moves to its neighbours and reproduces at the receiving district's own R, so a well-vaccinated neighbour resists re-seeding.  The country counts as eliminated only when every district reaches zero in the same generation.  The elimination probability carries its Monte Carlo interval.  Protection wanes at a constant rate, and every result comes from 200 model runs with a fixed random seed, so the same settings always give the same answer.</p>
+    <p><b>What v5 does not claim.</b></p>
+    <ul>
+      <li>It is a teaching tool, not a forecast.  Compare programmes; do not read the levels as predictions for any country.</li>
+      <li>The six kinds of dog, their contact weights and every access figure are judgement taken from the advanced model, not field measurements.  They describe Sri Lanka, and every district uses the same mix.</li>
+      <li>Proportionate mixing between kinds of dog is assumed.  If street dogs mainly bite street dogs, household dogs matter even less; the lesson becomes stronger, it does not reverse.</li>
+      <li>The access figures are behavioural quantities: owners presenting and restraining their dogs, communities tolerating or feeding street dogs.  Round 1 field data should replace them.</li>
+      <li>A dog that no channel can reach is missed every round; a dog within a channel's reach is missed at random.</li>
+      <li>Vaccine failure is random: each dose fails on its own, so a dog whose dose failed gets a fresh chance at the next round.  That is the most forgiving reading.  Dogs that never respond, a weak vaccine that also protects for less time, or a broken cold chain that fails a whole district every round would all do much more harm.</li>
+      <li>There is no space inside a district: no dispersal kernel and no local depletion, so the advanced model's finding that a dense urban block can sustain rabies on its own cannot appear here.</li>
+      <li>Finding a dog takes no time: a sweeping team spends its whole day on catch attempts, so with high enough productivity it eventually catches even the wariest dogs.  In reality the last dogs are also the hardest to find.</li>
+      <li>Puppies do not grow up: a vaccinated puppy stays in the puppy group rather than carrying its immunity into the adult groups, and there is no puppy cohort carry-over.</li>
+      <li>There is no emergency response, no imported cases, no verification of freedom, and no check on team logistics or campaign windows.</li>
+      <li>v4's limits still apply: a regular grid with neighbour-only coupling and no human-mediated dog movement; a ceiling of 300 new cases per district per generation; an initial burden fixed per district rather than scaled to its size; no critical community size; one deterministic immunity backbone shared by all runs; no observation layer, so observed zero and true zero cannot be told apart; elimination that, once reached, cannot be lost; and map colour bands fixed at 80, 60 and 45%.</li>
+    </ul>
+  </footer>
+</div>
+
+<script>
+"use strict";
+// ==== ENGINE START ====
+// Metapopulation model v6 - engine. Everything between ENGINE START and ENGINE END is free of the
+// page, so it can be run headless.
+// v6 (16 Oct 2026): each round is spread evenly over the district campaign weeks (immuneF).  The page
+// caps efficacy at 95% and no longer offers static points; the engine keeps the static channel, inert
+// unless P.chStatic is set, so it can be restored once its alignment with the advanced model is studied.
+// v5.1: efficacy may be 0 (a placebo); the immunising fraction is clamped to [0, 1].  districtImmunity()
+// feeds the effective-immunity map.
+var GENWK=7;
+
+// ---- the dogs: six strata, built in, not editable ----
+// Taken from the advanced model r22r4 STRATA table (Sri Lanka dog population matrix).
+//   share  share of all dogs
+//   w      contact weight. R responds to CONTACT-SQUARED weighted immunity (exact under
+//          proportionate mixing between strata), so a stratum's share of transmission is
+//          share*w^2 / sum(share*w^2).
+//   st     static-point access, capped at one dog brought per household (1 / 1.8 dogs per household)
+//   d2     door-to-door access
+//   sa     share a street sweep can meet;  pc  chance a met dog is caught at each attempt
+//   or     share that takes an oral bait when baits are offered
+var STRATA=[
+ {key:'conf', tier:0, name:'Owned, confined',            share:0.20, w:0.1, st:0.556, d2:0.92, sa:0.00, pc:0.00, or:0.25},
+ {key:'semi', tier:0, name:'Owned, semi-confined',       share:0.28, w:1.0, st:0.55,  d2:0.88, sa:0.35, pc:0.85, or:0.55},
+ {key:'free', tier:1, name:'Owned, free-roaming',        share:0.22, w:1.6, st:0.20,  d2:0.60, sa:0.85, pc:0.75, or:0.72},
+ {key:'unow', tier:2, name:'Unowned, free-roaming',      share:0.17, w:2.0, st:0.00,  d2:0.03, sa:1.00, pc:0.65, or:0.78},
+ {key:'wily', tier:2, name:'Unowned, un-catchable tail', share:0.05, w:2.0, st:0.00,  d2:0.00, sa:1.00, pc:0.10, or:0.82},
+ {key:'pups', tier:3, name:'Puppies',                    share:0.08, w:1.0, st:0.30,  d2:0.80, sa:0.45, pc:0.90, or:0.00}
+];
+var ROAMING={free:1,unow:1,wily:1};
+var ORV_TAKE=0.70;   // baits offered per dog that takes one = 1/0.70
+var ORV_SERO=0.65;   // immunity from a bait relative to an injection
+// Sweeping effort is fixed, not a lever: the sweeping establishment in the r18 Sri Lanka budget
+// (Sri Lanka room export, 17 Sep 2026, shares 67/33/0): 7,837.5 team-days for 2.5 million dogs a round.
+var SWEEP_EFFORT=3.135;  // team-days per 1,000 dogs per round
+
+// ---- random numbers (v4, unchanged) ----
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0;
+  var t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t;
+  return ((t^t>>>14)>>>0)/4294967296; }; }
+var RND=Math.random;
+function setSeed(s){ RND=mulberry32(s>>>0||1); }
+function gauss(){var u=0,v=0;while(!u)u=RND();while(!v)v=RND();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function pois(l){ if(l<=0)return 0; if(l>30){var x=Math.round(l+Math.sqrt(l)*gauss());return x<0?0:x;}
+  var L=Math.exp(-l),k=0,p=1; do{k++;p*=RND();}while(p>L); return k-1; }
+
+// ---- the grid (v4, unchanged) ----
+var ROWS=5, COLS=5, NP=25, NB=[];
+function buildGrid(n){ COLS=Math.ceil(Math.sqrt(n)); ROWS=Math.ceil(n/COLS); NP=n; NB=[];
+  for(var i=0;i<n;i++){ var r=Math.floor(i/COLS), c=i%COLS, a=[];
+    if(r>0)a.push(i-COLS);
+    if(i+COLS<n)a.push(i+COLS);
+    if(c>0)a.push(i-1);
+    if(c<COLS-1&&i+1<n)a.push(i+1);
+    NB.push(a); }
+}
+function centreIdx(){ var idx=Math.floor((ROWS-1)/2)*COLS+Math.floor((COLS-1)/2); return idx<NP?idx:Math.floor(NP/2); }
+function scatterGaps(frac){ var k=Math.max(1,Math.round(frac*NP)), arr=[]; for(var j=0;j<k;j++)arr.push(Math.floor((j+0.5)*NP/k)); return arr; }
+buildGrid(NP);
+
+// ---- waning (v4, unchanged) ----
+function survProt(P){ var D=P.durYr*52;
+  if(P.waning===3) return function(a){ return a<D?1:0; };
+  if(P.waning===0) return function(a){ return Math.exp(-a/D); };
+  var SH=(P.waning===1)?2:3, lam=SH/D;
+  return function(a){ var z=lam*a,s=0,t=Math.exp(-z); for(var j=0;j<SH;j++){s+=t;t=t*z/(j+1);} return s; };
+}
+
+// ---- immunity of one pool of dogs ----
+// v4's immune() with the immunising fraction of a round (coverage x efficacy) supplied week by week by
+// fAt(w), and, from v6, each round spread evenly over the campaign weeks (see below).  With a one-week
+// campaign v6 equals v5.1 and v4 up to rounding.
+function immuneF(fAt,P,W,every,offset){
+  // v6: each round is spread EVENLY over the district campaign weeks.  Every campaign week the teams cover
+  // a fresh 1/campWk of the district (of this pool of dogs).  The part not yet covered this round still
+  // carries the pre-round immunity, decayed week by week (yU), so a week's teams immunise
+  // (f/campWk) x (1 - yU).  Over the campaign this adds exactly f of the pre-round gap, as before, but
+  // in equal weekly steps.  v5.1 used a constant weekly hazard instead, 1 - (1-f)^(1/campWk), which put
+  // most of a round into its first weeks and all of it into week one when f reached 1.
+  var mu=P.turn/100/52, arr=new Array(W), cw=Math.max(1,P.campWk);
+  if(P.waning===0){ // closed form
+    var omega=1/(P.durYr*52), dec=Math.exp(-(mu+omega)), x=0, yU=0;
+    for(var w=0;w<W;w++){ var f=Math.max(0,Math.min(1,fAt(w)));
+      var ph=((w-offset)%every+every)%every;
+      x=x*dec;
+      if(ph<P.campWk){ yU=(ph===0)?x:yU*dec; x=x+(f/cw)*(1-yU); }
+      arr[w]=x; }
+    return arr;
+  }
+  var Sv=survProt(P), coh=[], campStart=-1;        // cohort book-keeping for the other kernels
+  for(var w2=0;w2<W;w2++){
+    var f2=Math.max(0,Math.min(1,fAt(w2)));
+    var ph2=((w2-offset)%every+every)%every;
+    if(ph2===0) campStart=w2;
+    var keep=[], x2=0, xOld=0;                       // xOld: immunity from cohorts made before this round
+    for(var q=0;q<coh.length;q++){ var age=w2-coh[q].w, sv=Sv(age);
+      if(sv>1e-6){ keep.push(coh[q]); var cq=coh[q].f*Math.exp(-mu*age)*sv; x2+=cq; if(coh[q].w<campStart) xOld+=cq; } }
+    coh=keep;
+    if(ph2<P.campWk){ var add=(f2/cw)*(1-xOld); coh.push({w:w2,f:add}); x2+=add; }
+    arr[w2]=x2>1?1:x2;
+  }
+  return arr;
+}
+
+// ---- sweeping: one catch-effort curve ----
+// pool[k]  share of ALL dogs that a sweep can meet and that is not yet vaccinated this round
+// met[k]   share of ALL dogs that a sweep can meet, vaccinated or not
+// A team makes catch attempts at a fixed rate. With collars it can see which dogs are done,
+// so every attempt goes to an unvaccinated dog it meets; each attempt catches with the
+// stratum's probability pc. Without collars the attempts fall on every dog it meets, done or
+// not, so attempts and doses are spent re-catching. The productivity lever is the number of
+// dogs vaccinated per team-day at the START of a sweep; teams slow down as the easy dogs are
+// done and the wary ones are left. Teams stop when every dog they can meet has a collar.
+function sweepCatch(pool,met,pc,effortPerDog,prod,collars){
+  var K=pool.length,k,U=pool.slice(),caught=[],U0=0,pbar=0,M=0,i;
+  for(k=0;k<K;k++){ caught[k]=0; U0+=pool[k]; pbar+=pool[k]*pc[k]; M+=met[k]; }
+  var res={caught:caught,doses:0,newDogs:0,td:0,tdAvail:effortPerDog,prodReal:0,exhausted:false,startNew:0,startAll:0};
+  if(!(U0>1e-12)||!(effortPerDog>0)||!(prod>0)) return res;
+  pbar/=U0;
+  var att=prod/Math.max(1e-6,pbar);                // catch attempts per team-day
+  var STEPS=4000, dT=effortPerDog/STEPS, td=0, extra=0, allRate=0;
+  for(k=0;k<K;k++) allRate+=pc[k]*met[k];
+  // catches per team-day at the start of the sweep: all of them new with collars; without
+  // collars some land on dogs already vaccinated
+  res.startNew=collars?prod:att*pbar*U0/M; res.startAll=collars?prod:att*allRate/M;
+  for(i=0;i<STEPS;i++){
+    var Ut=0; for(k=0;k<K;k++) Ut+=U[k];
+    if(Ut<=U0*1e-9){ res.exhausted=true; break; }
+    var a=att*dT, den=collars?Ut:M;
+    for(k=0;k<K;k++){ if(!(U[k]>0)) continue; var c=a*pc[k]*U[k]/den; if(c>U[k]) c=U[k]; U[k]-=c; caught[k]+=c; }
+    if(!collars) extra+=a*allRate/M;               // every catch is a dose, done dogs included
+    td+=dT;
+  }
+  var nd=0; for(k=0;k<K;k++) nd+=caught[k];
+  res.newDogs=nd; res.doses=collars?nd:Math.max(nd,extra); res.td=td; res.prodReal=td>0?nd/td:0;
+  return res;
+}
+
+// ---- the delivery plan: which dogs each channel reaches in one round ----
+// Channels are layered in the advanced model's order: static point, door-to-door on the dogs the
+// static point missed, sweeping on the met dogs still not done, oral bait on what remains.
+// v6: the page never switches static points on (P.chStatic is always false there).
+// Access is PERSISTENT: a dog that no channel can reach is never vaccinated, however many
+// rounds run. A[k] is the share of stratum k that some channel can reach; inside it, each round
+// vaccinates a fresh share.  All quantities are per dog of the population, per round.
+function deliveryPlan(P){
+  var K=STRATA.length, eff=P.eff/100, h=Math.max(0,Math.min(1,(+P.d2dHH||0)/100)), k, s;
+  var onSt=!!P.chStatic, onD2=h>0, onSw=!!P.chSweep, onOrv=(P.orvFrom>0);
+  var w2=0; for(k=0;k<K;k++) w2+=STRATA[k].share*STRATA[k].w*STRATA[k].w;
+  var pl={K:K,pi:[],A:[],cPre:[],cPost:[],Fpre:[],Fpost:[],vSt:[],vD2:[],vSw:[],vOrv:[],orvFrom:(onOrv?P.orvFrom:0)};
+  var pool=[],met=[],pcs=[],p1=[],orA=[],orAll=0;
+  for(k=0;k<K;k++){ s=STRATA[k]; var off=(s.key==='pups'&&!P.pups);
+    var st=(onSt&&!off)?s.st:0, d2=(onD2&&!off)?s.d2*h:0, sa=(onSw&&!off)?s.sa:0, or=(onOrv&&!off)?s.or:0;
+    pl.pi[k]=s.share*s.w*s.w/w2;
+    pl.vSt[k]=st; pl.vD2[k]=(1-st)*d2; p1[k]=pl.vSt[k]+pl.vD2[k];
+    met[k]=s.share*sa; pool[k]=s.share*sa*(1-p1[k]); pcs[k]=s.pc; orA[k]=or; orAll+=s.share*or;
+    pl.A[k]=1-(1-st)*(1-d2)*(1-sa)*(1-or);
+  }
+  var sw=onSw?sweepCatch(pool,met,pcs,SWEEP_EFFORT/1000,P.sweepProd,!!P.collars)
+             :{caught:[0,0,0,0,0,0],doses:0,newDogs:0,td:0,tdAvail:0,prodReal:0,exhausted:false};
+  var c={dosesSt:0,dosesD2:0,dosesSw:sw.doses,newSw:sw.newDogs,takers:0,baits:0,covPre:0,covPost:0,
+         roamPre:0,roamPost:0,roamN:0,effSt:0,effD2:0,effSw:0,effOrv:0,effPre:0,effPost:0};
+  for(k=0;k<K;k++){ s=STRATA[k];
+    pl.vSw[k]=s.share>0?sw.caught[k]/s.share:0;
+    var p2=Math.min(1,p1[k]+pl.vSw[k]);
+    var o=orA[k]*(1-p2); pl.vOrv[k]=o;
+    pl.cPre[k]=p2; pl.cPost[k]=Math.min(1,p2+o);
+    pl.Fpre[k]=eff*p2; pl.Fpost[k]=eff*(p2+ORV_SERO*o);
+    c.dosesSt+=s.share*pl.vSt[k]; c.dosesD2+=s.share*pl.vD2[k]; c.takers+=s.share*o;
+    c.covPre+=s.share*pl.cPre[k]; c.covPost+=s.share*pl.cPost[k];
+    if(ROAMING[s.key]){ c.roamPre+=s.share*pl.cPre[k]; c.roamPost+=s.share*pl.cPost[k]; c.roamN+=s.share; }
+    c.effSt+=pl.pi[k]*eff*pl.vSt[k]; c.effD2+=pl.pi[k]*eff*pl.vD2[k];
+    c.effSw+=pl.pi[k]*eff*pl.vSw[k]; c.effOrv+=pl.pi[k]*eff*ORV_SERO*o;
+    c.effPre+=pl.pi[k]*pl.Fpre[k]; c.effPost+=pl.pi[k]*pl.Fpost[k];
+  }
+  // Baits offered: with collars, bait teams offer baits only to dogs without a collar; without
+  // collars they cannot tell, so they offer them to every dog they can reach, vaccinated or not.
+  // The extra baits immunise nobody; they only cost.
+  c.baits=(P.collars?c.takers:orAll)/ORV_TAKE;
+  if(c.roamN>0){ c.roamPre/=c.roamN; c.roamPost/=c.roamN; }
+  pl.sweep=sw; pl.sum=c;
+  return pl;
+}
+
+// ---- immunity of every stratum in one district ----
+// A refusing (gap) district refuses every channel: each round vaccinates the gap coverage of all
+// dogs, at random. With the surge on, it receives the full plan from the surge week. Each stratum
+// is split into the share some channel can reach (A) and the rest, which only the gap coverage
+// ever touched.
+function constF(a){ return function(){ return a; }; }
+function switchF(a,b,wk){ return function(w){ return w>=wk?b:a; }; }
+function gapF(fPlan,gF,surgeW){ return function(w){ return (surgeW>=0&&w>=surgeW)?fPlan(w):gF; }; }
+function gapRestF(gF,surgeW){ return function(w){ return (surgeW>=0&&w>=surgeW)?0:gF; }; }
+function strataImmunity(P,PL,W,every,isGap,offset,surgeW){
+  var out=[], K=PL.pi.length, k, w;
+  var orvW=(PL.orvFrom>0)?((PL.orvFrom-1)*every+offset):-1;
+  var gF=P.gapCov*P.eff/10000;
+  for(k=0;k<K;k++){
+    var A=PL.A[k], x;
+    if(!(A>0)&&!isGap){ x=new Array(W); for(w=0;w<W;w++) x[w]=0; out.push(x); continue; }
+    var fpre=A>0?Math.min(1,PL.Fpre[k]/A):0, fpost=A>0?Math.min(1,PL.Fpost[k]/A):0;
+    var fPlan=(orvW>=0)?switchF(fpre,fpost,orvW):constF(fpre);
+    var R,U=null;
+    if(!isGap) R=immuneF(fPlan,P,W,every,offset);
+    else {
+      R=immuneF(gapF(fPlan,gF,surgeW),P,W,every,offset);
+      if(A<1) U=immuneF(gapRestF(gF,surgeW),P,W,every,offset);
+    }
+    if(A>=1) x=R;
+    else { x=new Array(W); for(w=0;w<W;w++) x[w]=(A>0?A*R[w]:0)+(U?(1-A)*U[w]:0); }
+    out.push(x);
+  }
+  return out;
+}
+
+// ---- what one round adds, by channel, once the programme has settled ----
+// Round 4 (it starts at week 3*every). Dogs still protected from earlier rounds gain nothing
+// from another dose, so each channel's contribution is its immunising fraction times the share of
+// its reachable dogs that were NOT immune just before the round.  Returns points (x100) of
+// contact-weighted immunity, plus the curve before and after the round for the same district.
+function roundGain(P,PL){
+  var W=Math.round(P.horizonYr*52), every=Math.max(1,Math.round(P.intervalYr*52)), K=PL.pi.length, k;
+  var xs=strataImmunity(P,PL,W,every,false,0,-1), wPre=3*every-1, a=3*every, b=Math.min(W,4*every);
+  var orvOn=(PL.orvFrom>0&&3>=PL.orvFrom-1), eff=P.eff/100;
+  var g={st:0,d2:0,sw:0,orv:0,before:0,after:0};
+  for(k=0;k<K;k++){ var A=PL.A[k]; if(!(A>0)) continue;
+    var free=1-Math.min(1,xs[k][wPre]/A);         // share of reachable dogs not immune before the round
+    g.st+=100*PL.pi[k]*eff*PL.vSt[k]*free; g.d2+=100*PL.pi[k]*eff*PL.vD2[k]*free;
+    g.sw+=100*PL.pi[k]*eff*PL.vSw[k]*free; if(orvOn) g.orv+=100*PL.pi[k]*eff*ORV_SERO*PL.vOrv[k]*free; }
+  for(k=0;k<K;k++) g.before+=PL.pi[k]*xs[k][wPre];
+  for(var w=a;w<b;w++){ var e=0; for(k=0;k<K;k++) e+=PL.pi[k]*xs[k][w]; if(e>g.after) g.after=e; }
+  return g;
+}
+
+// ---- v5.1: effective immunity of a fully served district and of a refusing one, for the map ----
+// The settled round is round 4, as in roundGain; the values are contact-weighted and after efficacy.
+// The refusing district is shown without the surge, as the coverage map shows it.  A district's
+// rollout offset only shifts its curve in time, so these two pairs hold for every district.
+// served.before and served.after equal roundGain's before and after exactly.
+function districtImmunity(P,PL){
+  var W=Math.round(P.horizonYr*52), every=Math.max(1,Math.round(P.intervalYr*52)), K=PL.pi.length;
+  var wPre=3*every-1, a=3*every, b=Math.min(W,4*every);
+  function pair(isGap){ var xs=strataImmunity(P,PL,W,every,isGap,0,-1), before=0, after=0, k, w;
+    for(k=0;k<K;k++) before+=PL.pi[k]*xs[k][wPre];
+    for(w=a;w<b;w++){ var e=0; for(k=0;k<K;k++) e+=PL.pi[k]*xs[k][w]; if(e>after) after=e; }
+    return {before:before, after:after}; }
+  return {served:pair(false), gap:pair(true)};
+}
+
+// ---- the stochastic engine (v4, unchanged apart from where R comes from) ----
+function run(P,PL){
+  setSeed(P.seed);                                  // common random numbers
+  var W=Math.round(P.horizonYr*52), G=Math.floor(W/GENWK), every=Math.max(1,Math.round(P.intervalYr*52));
+  var surgeW=P.surge?Math.round(P.surgeYr*52):-1, R0=P.r0/100, rho=P.rho/100;
+  var Reff=[], cache={};
+  var rollWk=Math.max(P.campWk, Math.min(P.rolloutWk||P.campWk, every)), spread=rollWk-P.campWk;
+  for(var p=0;p<NP;p++){ var isGap=!!P.gaps[p];
+    var off=NP>1?Math.round(p/(NP-1)*spread):0, key=(isGap?'g':'n')+off;
+    var xs=cache[key]||(cache[key]=strataImmunity(P,PL,W,every,isGap,off,surgeW));
+    var row=new Array(G);
+    for(var gg=0;gg<G;gg++){ var wk=Math.min(W-1,gg*GENWK), sm=0;
+      // R = R0 x (1 - contact-squared weighted immunity). With one stratum this is v4's R0*(1-X).
+      for(var k=0;k<xs.length;k++) sm+=PL.pi[k]*(1-xs[k][wk]);
+      row[gg]=R0*sm; }
+    Reff.push(row);
+  }
+  var elim=0, times=[], persist=new Array(NP).fill(0), series=[];
+  for(var r=0;r<P.runs;r++){
+    var I=new Array(NP); for(var i=0;i<NP;i++)I[i]=P.I0;
+    var eg=-1, ser=new Array(G).fill(0);
+    for(var g2=0;g2<G;g2++){
+      var nI=new Array(NP), tot=0;
+      for(var p1=0;p1<NP;p1++){ var a=NB[p1],sum=0; for(var j=0;j<a.length;j++)sum+=I[a[j]]; var nbm=a.length?sum/a.length:0;
+        // coupling redistributes infection instead of creating it (v4 fix 1)
+        var own = P.legacyCoupling ? I[p1] : (1-rho)*I[p1];
+        var ni=pois(Reff[p1][g2]*(own+rho*nbm)); if(ni>P.Icap)ni=P.Icap; nI[p1]=ni; tot+=ni; }
+      I=nI; ser[g2]=tot; if(tot===0){ eg=g2; break; }
+    }
+    if(eg>=0){ elim++; times.push(eg*GENWK/52); }
+    for(var p2=0;p2<NP;p2++) if(I[p2]>0) persist[p2]++;
+    series.push(ser);
+  }
+  times.sort(function(a,b){return a-b;});
+  // unconditioned quantiles over ALL runs (v4 fix 5)
+  function qAll(q){ var ii=Math.floor(q*P.runs); return ii<times.length?times[ii]:null; }
+  var t50=qAll(0.5), t80=qAll(0.8), t90=qAll(0.9);
+  var med=new Array(G); for(var g3=0;g3<G;g3++){ var col=[]; for(var s2=0;s2<series.length;s2++)col.push(series[s2][g3]); col.sort(function(a,b){return a-b;}); med[g3]=col[Math.floor(col.length/2)]; }
+  return { elimProb:elim/P.runs, t50:t50, t80:t80, t90:t90,
+           medTime:times.length?times[Math.floor(times.length/2)]:null,
+           persist:persist.map(function(c){return c/P.runs;}), G:G, medSeries:med, samples:series.slice(0,5),
+           resCount:persist.filter(function(c){return c/P.runs>=0.5;}).length, elimYears:times };
+}
+
+// ---- costs ----
+// Unit costs are held in Sri Lankan rupees.  Door-to-door and sweeping come from the r18 Sri Lanka
+// budget as it stands in the Sri Lanka room (export of 17 Sep 2026, shares 67/33/0), recurring
+// items at year-1 prices (one-time items left out), with the biohazard box corrected to
+// LKR 1,000 per box of 300 doses.  The room has no oral bait, so bait comes from the 16 Sep 2026
+// workbook (67/28/5).
+//   vac      vaccine 300 + syringe 14 (both +10% wastage) + certificate 5 + biohazard 3.33
+//   collar   long-lasting collar
+//   d2dDel   door-to-door delivery per dog: 3 vaccinators and 3 facilitators a team-day, porter
+//            and three-wheeler, VS coordinators, kit and posters; an average at the budget's volume
+//            (1,591,250 dogs at 100 a team-day)
+//   sweepTD  sweeping team-day, all in: 2 vaccinators, 4 catchers, porter and three-wheelers,
+//            nets, gloves and kit
+//   bait     oral bait offered: bait 2,500 (unsourced) +10% wastage, plus distribution
+//   statDel  static-point delivery per dog: an assumption, the budget has no static line
+var COST0={vac:353.7333333, collar:70, d2dDel:288.19, sweepTD:20245.64, bait:2810, statDel:40};
+
+// cost per dog of the population for one round, in LKR
+function roundCost(PL,C,collars,orvOn){
+  var c=PL.sum, col=collars?C.collar:0;
+  var st=c.dosesSt*(C.vac+col+C.statDel);
+  var d2=c.dosesD2*(C.vac+col+C.d2dDel);
+  var sw=c.dosesSw*C.vac+c.newSw*col+PL.sweep.td*C.sweepTD;
+  var orv=orvOn?c.baits*C.bait:0;
+  return {st:st,d2:d2,sw:sw,orv:orv,total:st+d2+sw+orv};
+}
+function gapRoundCost(P,C){ return (P.gapCov/100)*(C.vac+(P.collars?C.collar:0)+C.d2dDel); }
+
+// national cost (LKR) of every round run from year 0 up to and including time t; with
+// beforeT set, only rounds strictly before t (a run that never eliminates pays for the rounds
+// inside the horizon, not one beyond it)
+function costToYears(t,P,PL,C,nGapsN,beforeT){
+  var Nd=P.dogPop/NP, every=P.intervalYr, total=0, r=0, nN=NP-nGapsN;
+  var pre=roundCost(PL,C,P.collars,false).total, post=roundCost(PL,C,P.collars,true).total, gap=gapRoundCost(P,C);
+  var lim=beforeT?t-1e-9:t+1e-9;
+  for(var y=0; y<=lim; y+=every, r++){
+    var orvOn=(PL.orvFrom>0&&r>=PL.orvFrom-1), cN=orvOn?post:pre;
+    var cG=(P.surge&&y>=P.surgeYr)?cN:gap;
+    total+=(nN*cN+nGapsN*cG)*Nd;
+  }
+  return total;
+}
+// national cost (LKR) of round index r (0 = the first round), gap districts included
+function costOfRound(r,P,PL,C,nGapsN){
+  var y=r*P.intervalYr, orvOn=(PL.orvFrom>0&&r>=PL.orvFrom-1);
+  var cN=roundCost(PL,C,P.collars,orvOn).total, cG=(P.surge&&y>=P.surgeYr)?cN:gapRoundCost(P,C);
+  return ((NP-nGapsN)*cN+nGapsN*cG)*P.dogPop/NP;
+}
+// ==== ENGINE END ====
+
+
+// ==== PAGE ====
+function $(id){ return document.getElementById(id); }
+var S={ N:25, gapCov:10, eff:95, rho:15, turn:45, r0:180, dogPop:2500000, surge:false, surgeYr:1,
+        durYr:3, intervalYr:1, campWk:4, rolloutWk:4, horizonYr:12, I0:15, Icap:300, runs:200,
+        waning:0, seed:12345, legacyCoupling:false, gaps:{},
+        d2dHH:100, chSweep:true, sweepProd:100, orvFrom:0, collars:true, pups:true, chStatic:false };
+var C=JSON.parse(JSON.stringify(COST0));            // unit costs, held in LKR
+var CUR='USD', LKR_PER_USD=330.76, GBP_PER_USD=0.7555;   // 15 October 2026
+var curPreset=null, lastRes=null, lastPL=null, lastGain=null, lastNat=null, lastRbar=null;
+
+// ---- formatting ----
+function fmtN(x){ x=Math.round(x); if(x>=1e9) return (x/1e9).toFixed(1)+"B"; if(x>=1e6) return (x/1e6).toFixed(x>=1e7?0:1)+"M"; if(x>=1e3) return Math.round(x/1e3)+"k"; return ""+x; }
+function commas(n){ return Math.round(n).toLocaleString("en-US"); }
+function parseNum(s){ return +String(s).replace(/[^0-9]/g,"")||0; }
+function pct(x,d){ return (100*x).toFixed(d==null?0:d)+"%"; }
+function toCur(lkr){ var usd=lkr/LKR_PER_USD; return CUR==='USD'?usd:(CUR==='GBP'?usd*GBP_PER_USD:lkr); }
+function fromCur(v){ if(CUR==='USD') return v*LKR_PER_USD; if(CUR==='GBP') return v/GBP_PER_USD*LKR_PER_USD; return v; }
+function sym(){ return CUR==='USD'?'$':(CUR==='GBP'?'£':'Rs '); }
+function fmtMoney(lkr){ var v=toCur(lkr), t;
+  if(v>=1e9) t=(v/1e9).toFixed(v>=1e10?1:2)+"B"; else if(v>=1e6) t=(v/1e6).toFixed(v>=1e8?0:(v>=1e7?1:2))+"M";
+  else if(v>=1e3) t=Math.round(v/1e3)+"k"; else t=Math.round(v)+"";
+  return sym()+t; }
+function fmtUnit(lkr){ var v=toCur(lkr); return sym()+(CUR==='LKR'?commas(v):v.toFixed(2)); }
+
+// ---- colours ----
+function covColor(cov){ if(cov>=80)return "#5fa023"; if(cov>=60)return "#c8881c"; if(cov>=45)return "#dd7a3a"; return "#e24b4a"; }
+function persColor(f){ if(f<0.12)return "#5fa023"; if(f<0.5)return "#c8881c"; return "#e24b4a"; }
+function TC(){ var d=document.documentElement.classList.contains('dark');
+  return d ? {grid:'#2c343a',faint:'#222a30',axis:'#9aa39c',accent:'#4aa6cc',sample:'#5b6b62',good:'#7ec742',bad:'#e2726f',warn:'#e0a93b',band:'rgba(74,166,204,.45)',track:'#2c343a'}
+           : {grid:'#e4e3da',faint:'#f0efe8',axis:'#5f6b64',accent:'#15506e',sample:'#c2cdc4',good:'#3c6b14',bad:'#a8302f',warn:'#8a5e10',band:'rgba(21,80,110,.35)',track:'#e4e3da'}; }
+
+// ---- the dogs card ----
+var TIERS=[
+  {name:'Household dogs', desc:'owned, confined or semi-confined', how:'door-to-door (about 90% of them); a sweep meets only those let out', keys:['conf','semi'], col:'--t0'},
+  {name:'Owned free-roaming', desc:'owned dogs that live on the street', how:'door-to-door if at home (60%); a sweep meets most of them', keys:['free'], col:'--t1'},
+  {name:'Unowned free-roaming', desc:'street dogs, including the 5% of all dogs that are very hard to catch', how:'sweeping; oral bait for the wary ones; door-to-door almost never', keys:['unow','wily'], col:'--t2'},
+  {name:'Puppies', desc:'under three months', how:'door-to-door, and sweeps that find litters, if vaccinated from two weeks of age', keys:['pups'], col:'--t3'}
+];
+function tierShares(){ var w2=0; STRATA.forEach(function(s){ w2+=s.share*s.w*s.w; });
+  return TIERS.map(function(t){ var d=0,tr=0; STRATA.forEach(function(s){ if(t.keys.indexOf(s.key)>=0){ d+=s.share; tr+=s.share*s.w*s.w/w2; } }); return {d:d,tr:tr}; }); }
+function drawDogs(){
+  var sh=tierShares(), cs=getComputedStyle(document.documentElement), W=460, H=74, x0=84, bw=W-x0-8;
+  var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Share of dogs against share of transmission, by tier">';
+  [['Dogs','d',8],['Transmission','tr',42]].forEach(function(r){
+    s+='<text x="0" y="'+(r[2]+16)+'" font-size="11" fill="'+TC().axis+'">'+r[0]+'</text>';
+    var x=x0;
+    sh.forEach(function(v,i){ var w=bw*v[r[1]]; var col=cs.getPropertyValue(TIERS[i].col).trim();
+      s+='<rect x="'+x.toFixed(1)+'" y="'+r[2]+'" width="'+Math.max(0,w-1).toFixed(1)+'" height="24" rx="3" fill="'+col+'"/>';
+      if(w>26) s+='<text x="'+(x+w/2).toFixed(1)+'" y="'+(r[2]+16)+'" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">'+Math.round(100*v[r[1]])+'%</text>';
+      x+=w; });
+  });
+  s+='</svg>'; $("dogbars").innerHTML=s;
+  var t='<tr><th>Tier</th><th style="text-align:right">Dogs</th><th style="text-align:right">Transmission</th><th>Reached by</th></tr>';
+  TIERS.forEach(function(tr,i){ t+='<tr><td><span class="sw" style="background:var('+tr.col+')"></span><b>'+tr.name+'</b><br><span style="color:var(--muted)">'+tr.desc+'</span></td><td class="n">'+Math.round(100*sh[i].d)+'%</td><td class="n">'+Math.round(100*sh[i].tr)+'%</td><td>'+tr.how+'</td></tr>'; });
+  $("dogtable").innerHTML=t;
+}
+
+// ---- maps ----
+function cellGrid(id, colorFn, clickable, labelFn, titleFn){
+  var cw=64, ch=46, pad=4, W=COLS*cw+pad*2, H=ROWS*ch+pad*2, showLab=(NP<=36), rx=(NP<=36?6:3);
+  var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">';
+  for(var i=0;i<NP;i++){ var r=Math.floor(i/COLS), c=i%COLS, x=pad+c*cw, y=pad+r*ch;
+    var fill=colorFn(i);
+    s+='<rect class="'+(clickable?'cell':'')+'" '+(clickable?'onclick="toggle('+i+')" ':'')+'x="'+(x+1.5)+'" y="'+(y+1.5)+'" width="'+(cw-3)+'" height="'+(ch-3)+'" rx="'+rx+'" fill="'+fill+'">'+(titleFn?'<title>'+titleFn(i)+'</title>':'')+'</rect>';
+    if(showLab && labelFn){ var lab=labelFn(i); if(lab) s+='<text x="'+(x+cw/2)+'" y="'+(y+ch/2+4)+'" text-anchor="middle" font-size="12" font-weight="700" fill="#fff" style="pointer-events:none">'+lab+'</text>'; }
+  }
+  s+='</svg>'; $(id).innerHTML=s;
+}
+function planCoverage(){ var PL=lastPL||deliveryPlan(S); return 100*((S.orvFrom>0)?PL.sum.covPost:PL.sum.covPre); }
+// v5.1: the map shows either reported coverage or effective immunity just after the settled round.
+// Bands for immunity sit on the threshold (1 - 1/R0) and the 70% floor.  Colour follows the whole number
+// printed in the cell, so a number and its colour never disagree: a district printed at or below the
+// threshold as the page prints it (44% at R0 1.8) is red.
+var MAPMODE='cov';
+function thrPct(){ return Math.max(0,Math.floor(100*(1-100/S.r0)+1e-9))+1; }   // lowest whole number above the threshold
+function immColor(p){ if(p>=70) return "#5fa023"; if(p>=thrPct()) return "#c8881c"; return "#e24b4a"; }
+function mapImmunity(){ var PL=lastPL||deliveryPlan(S); return districtImmunity(S,PL); }
+function setMapMode(m){ MAPMODE=m; $("mapCovBtn").classList.toggle("on",m==='cov'); $("mapImmBtn").classList.toggle("on",m==='imm');
+  drawCovMap(); if(lastRes&&lastPL) verdict(); }
+function drawCovMap(){ var pc=Math.round(planCoverage()), DI=mapImmunity(), thr=thrPct();
+  var imS=Math.round(100*DI.served.after), imG=Math.round(100*DI.gap.after);
+  function covOf(i){ return S.gaps[i]?S.gapCov:pc; }
+  function immOf(i){ return S.gaps[i]?imG:imS; }
+  function tip(i){ var d=S.gaps[i]?DI.gap:DI.served;
+    return "District "+(i+1)+(S.gaps[i]?" (refusing gap)":"")+": reported coverage "+covOf(i)+"%; effective immunity "+Math.round(100*d.before)+"% just before a settled round, "+Math.round(100*d.after)+"% just after it"; }
+  if(MAPMODE==='imm'){
+    cellGrid("covmap", function(i){ return immColor(immOf(i)); }, true, function(i){ return immOf(i)+""; }, tip);
+    $("mapNote").textContent="Colour and number are each district's effective immunity just after a settled round: protected dogs, weighted by their share of transmission.  What the dogs have, not what the report says.  Click a district to make it a refusing gap.";
+    $("mapLegend").innerHTML='<span><span class="sw" style="background:var(--green)"></span>&#8805;70%: at or above the floor</span>'+
+      '<span><span class="sw" style="background:var(--amber)"></span>'+thr+'&#8211;69%: above the threshold, below the floor</span>'+
+      '<span><span class="sw" style="background:var(--red)"></span>&#8804;'+(thr-1)+'%: at or below the threshold</span>'+
+      '<span style="opacity:.8">threshold 1 &#8722; 1/R&#8320; at R&#8320; '+(S.r0/100).toFixed(2)+'; immunity falls before the next round (see the gauge)</span>';
+  } else {
+    cellGrid("covmap", function(i){ return covColor(covOf(i)); }, true, function(i){ return covOf(i)+""; }, tip);
+    $("mapNote").textContent="Colour and number are the share of all dogs each district vaccinates per round: what a campaign report would show.  Click any district to turn it into a refusing gap, or click a gap to restore it.";
+    $("mapLegend").innerHTML='<span><span class="sw" style="background:var(--green)"></span>&#8805;80%</span>'+
+      '<span><span class="sw" style="background:var(--amber)"></span>60&#8211;79%</span>'+
+      '<span><span class="sw" style="background:#dd7a3a"></span>45&#8211;59%</span>'+
+      '<span><span class="sw" style="background:var(--red)"></span>&lt;45%</span>'+
+      '<span style="opacity:.8">fixed bands for reported coverage, not a threshold</span>';
+  }
+}
+function drawOutMap(persist){ cellGrid("outmap", function(i){ return persColor(persist[i]); },
+  false, function(i){ return Math.round(persist[i]*100)+""; }); }
+
+// ---- series chart (v4) ----
+function drawSeries(med, samples, G, horizon){
+  var W=560,H=210,pL=44,pR=12,pT=10,pB=28;
+  var t=TC();
+  var ymax=100; var all=med.slice(); samples.forEach(function(s){all=all.concat(s);});
+  all.forEach(function(v){ if(v>ymax)ymax=v; });
+  var lo=Math.log10(0.5), hi=Math.log10(ymax*1.2);
+  function X(g){ return pL+(g/(G-1))*(W-pL-pR); }
+  function Y(v){ var u=(Math.log10(Math.max(0.5,v))-lo)/(hi-lo); return (H-pB)-u*(H-pB-pT); }
+  var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">';
+  [1,10,100,1000,10000,100000].forEach(function(v){ if(v<=ymax*1.2){ var y=Y(v);
+    s+='<line x1="'+pL+'" y1="'+y+'" x2="'+(W-pR)+'" y2="'+y+'" stroke="'+t.grid+'"/>';
+    s+='<text x="'+(pL-6)+'" y="'+(y+4)+'" text-anchor="end" font-size="10" fill="'+t.axis+'">'+v+'</text>'; }});
+  for(var yr=0;yr<=horizon;yr+=3){ var gx=(yr/horizon)*(G-1); var x=X(gx);
+    s+='<line x1="'+x+'" y1="'+pT+'" x2="'+x+'" y2="'+(H-pB)+'" stroke="'+t.faint+'"/>';
+    s+='<text x="'+x+'" y="'+(H-pB+14)+'" text-anchor="middle" font-size="10" fill="'+t.axis+'">'+yr+'</text>'; }
+  s+='<text x="'+((pL+W-pR)/2)+'" y="'+(H-3)+'" text-anchor="middle" font-size="11" fill="'+t.axis+'">years</text>';
+  samples.forEach(function(ser){ var d=""; for(var g=0;g<G;g++){ d+=(g?"L":"M")+X(g).toFixed(1)+" "+Y(ser[g]).toFixed(1)+" "; }
+    s+='<path d="'+d+'" fill="none" stroke="'+t.sample+'" stroke-width="1"/>'; });
+  var dm=""; for(var g2=0;g2<G;g2++){ dm+=(g2?"L":"M")+X(g2).toFixed(1)+" "+Y(med[g2]).toFixed(1)+" "; }
+  s+='<path d="'+dm+'" fill="none" stroke="'+t.accent+'" stroke-width="2.6"/>';
+  s+='</svg>'; $("serieschart").innerHTML=s;
+}
+
+// ---- effective immunity gauge ----
+function drawGauge(peak, trough, thr){  // peak = just after the round, trough = just before it
+  var t=TC(), W=300, H=50, x0=6, x1=W-6, y=18, h=12;
+  function X(v){ return x0+(x1-x0)*Math.max(0,Math.min(1,v)); }
+  var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Effective immunity range against the threshold and the 70% floor">';
+  s+='<rect x="'+x0+'" y="'+y+'" width="'+(x1-x0)+'" height="'+h+'" rx="3" fill="'+t.track+'"/>';
+  s+='<rect x="'+X(trough).toFixed(1)+'" y="'+y+'" width="'+Math.max(2,X(peak)-X(trough)).toFixed(1)+'" height="'+h+'" rx="3" fill="'+t.band+'"/>';
+  s+='<line x1="'+X(peak).toFixed(1)+'" y1="'+(y-2)+'" x2="'+X(peak).toFixed(1)+'" y2="'+(y+h+2)+'" stroke="'+t.accent+'" stroke-width="2.5"/>';
+  s+='<line x1="'+X(thr).toFixed(1)+'" y1="'+(y-4)+'" x2="'+X(thr).toFixed(1)+'" y2="'+(y+h+4)+'" stroke="'+t.bad+'" stroke-width="2" stroke-dasharray="3 2"/>';
+  s+='<line x1="'+X(0.7).toFixed(1)+'" y1="'+(y-4)+'" x2="'+X(0.7).toFixed(1)+'" y2="'+(y+h+4)+'" stroke="'+t.good+'" stroke-width="2"/>';
+  s+='<text x="'+X(0.7).toFixed(1)+'" y="'+(y-7)+'" text-anchor="middle" font-size="10" fill="'+t.good+'">70% floor</text>';
+  s+='<text x="'+X(thr).toFixed(1)+'" y="'+(y+h+15)+'" text-anchor="middle" font-size="10" fill="'+t.bad+'">threshold '+Math.round(100*thr)+'%</text>';
+  s+='</svg>'; $("gauge").innerHTML=s;
+}
+
+// ---- the settled round (round 4), fully served district and whole country ----
+function natGain(PL){
+  // national effective immunity before and after round 4, gap districts included (surge as set)
+  var W=Math.round(S.horizonYr*52), every=Math.max(1,Math.round(S.intervalYr*52)), g=nGaps();
+  var surgeW=S.surge?Math.round(S.surgeYr*52):-1, wPre=3*every-1, a=3*every, b=Math.min(W,4*every);
+  function curve(isGap){ var xs=strataImmunity(S,PL,W,every,isGap,0,surgeW), e=new Array(W);
+    for(var w=0;w<W;w++){ var v=0; for(var k=0;k<xs.length;k++) v+=PL.pi[k]*xs[k][w]; e[w]=v; } return e; }
+  var en=curve(false), eg=g>0?curve(true):en, before=((NP-g)*en[wPre]+g*eg[wPre])/NP, after=0;
+  for(var w=a;w<b;w++){ var v=((NP-g)*en[w]+g*eg[w])/NP; if(v>after) after=v; }
+  return {before:before,after:after};
+}
+function cycleR(PL){
+  // geometric mean of R over the settled cycle in a fully served district
+  var W=Math.round(S.horizonYr*52), every=Math.max(1,Math.round(S.intervalYr*52));
+  var xs=strataImmunity(S,PL,W,every,false,0,-1), R0=S.r0/100, sl=0, n=0;
+  for(var w=3*every; w<Math.min(W,4*every); w+=GENWK){ var sm=0; for(var k=0;k<xs.length;k++) sm+=PL.pi[k]*(1-xs[k][w]); sl+=Math.log(Math.max(1e-9,R0*sm)); n++; }
+  return n?Math.exp(sl/n):R0;
+}
+
+// ---- update ----
+function syncParams(){
+  S.d2dHH=+$("d2dHH").value; S.chSweep=$("chSweep").checked; S.sweepProd=+$("sweepProd").value;
+  S.orvFrom=+$("orvFrom").value; S.collars=$("collars").checked; S.pups=$("pups").checked; S.chStatic=false;   // v6: no static points
+  S.gapCov=+$("gapCov").value; S.surge=$("surge").checked; S.surgeYr=+$("surgeYr").value;
+  S.eff=+$("eff").value; S.rho=+$("rho").value; S.turn=+$("turn").value; S.r0=+$("r0").value;
+  S.intervalYr=+$("intv").value; S.campWk=+$("campwk").value;
+  var everyWk=Math.max(1,Math.round(S.intervalYr*52));
+  S.rolloutWk=Math.max(S.campWk, Math.min(+$("roll").value||S.campWk, everyWk));
+  S.durYr=+$("dur").value; S.waning=+$("wan").value; S.runs=+$("runs").value;
+  S.seed=Math.max(1,+$("seedIn").value||1);
+  var dp=parseNum($("dogPop").value); if(dp>0) S.dogPop=dp;
+  $("d2dHHV").textContent=S.d2dHH+"%"; $("sweepProdV").textContent=S.sweepProd+"/day";
+  $("sweepProd").disabled=!S.chSweep; $("surgeYr").disabled=!S.surge;
+  $("gapCovV").textContent=S.gapCov+"%"; $("surgeYrV").textContent=S.surgeYr;
+  $("effV").textContent=S.eff+"%"; $("rhoV").textContent=S.rho+"%"; $("turnV").textContent=S.turn+"%"; $("r0V").textContent=(S.r0/100).toFixed(2);
+  $("intvV").textContent=S.intervalYr+" yr"; $("campwkV").textContent=S.campWk+" wk"; $("rollV").textContent=S.rolloutWk+" wk";
+  $("durV").textContent=S.durYr+" yr"; $("wanV").textContent=["exponential","Erlang 2","Erlang 3","step"][S.waning]; $("runsV").textContent=S.runs;
+  var td=SWEEP_EFFORT*S.dogPop/1000;
+  $("effortNote").innerHTML="Sweeping effort is fixed at "+SWEEP_EFFORT.toFixed(1)+" team-days per 1,000 dogs a round, the sweeping establishment in the r18 Sri Lanka budget (67% door-to-door, 33% sweeping): "+commas(td)+" team-days a round, about "+commas(td/NP)+" per district.  Productivity is how many dogs a team vaccinates in a day at the start of a sweep; teams slow down as the easy dogs are done.";
+}
+function nGaps(){ var n=0; for(var k in S.gaps) if(S.gaps[k])n++; return n; }
+var timer=null;
+function schedule(){ if(timer)clearTimeout(timer); timer=setTimeout(compute,140); }
+function compute(){
+  var PL=deliveryPlan(S);
+  var res=run(S,PL);
+  lastRes=res; lastPL=PL; lastGain=roundGain(S,PL); lastNat=natGain(PL); lastRbar=cycleR(PL);
+  render();
+}
+function roundCovAll(PL){ return (S.orvFrom>0)?PL.sum.covPost:PL.sum.covPre; }
+function render(){
+  if(!lastRes) return;
+  var res=lastRes, PL=lastPL, G=lastGain, g=nGaps();
+  var ep=Math.round(res.elimProb*100);
+  $("sElim").textContent=ep+"%"; $("sElim").style.color = ep>=80?"var(--green)":ep>=40?"var(--amber)":"var(--red)";
+  var seCI=Math.round(196*Math.sqrt(Math.max(1e-9,res.elimProb*(1-res.elimProb))/S.runs));
+  $("sElimH").textContent="±"+seCI+" pp over "+S.runs+" model runs";
+  $("sTime").textContent = res.t80!=null ? res.t80.toFixed(1)+" yr" : "not reached";
+  var nE=res.elimYears?res.elimYears.length:0;
+  $("sTimeH").textContent = res.t80!=null
+    ? ("half of runs by "+(res.t50!=null?res.t50.toFixed(1)+" yr":"–")+", 9 in 10 by "+(res.t90!=null?res.t90.toFixed(1)+" yr":"not reached"))
+    : (res.t50!=null ? ("half of runs by "+res.t50.toFixed(1)+" yr, but 1 in 5 never gets there")
+       : (nE? ("only "+nE+" of "+S.runs+" runs eliminated at all") : "no run eliminated in the horizon"));
+  $("sGaps").textContent=g;
+  $("sRes").textContent=res.resCount+" / "+NP;
+  var c=PL.sum, orvOn=S.orvFrom>0, cov=roundCovAll(PL);
+  // the settled round is round 4 (year 3 x interval): the same round for every number in this row
+  var surged=S.surge&&(3*S.intervalYr>=S.surgeYr), gcov=surged?cov:S.gapCov/100;
+  $("sCov").textContent=pct(cov);
+  $("sCovH").textContent=(g>0? ("whole country, with "+g+" gap"+(g>1?"s":"")+(surged?" (surged)":"")+": "+pct(((NP-g)*cov+g*gcov)/NP)) : "what a campaign report shows");
+  $("sRoam").textContent=pct(orvOn?c.roamPost:c.roamPre);
+  $("sRoamH").textContent="owned free-roaming and unowned dogs";
+  var thr=1-100/S.r0;
+  $("sEff").innerHTML=pct(G.before)+' <span class="axisunit">&#8594;</span> '+pct(G.after);
+  var gA=Math.round(100*G.after); $("sEff").style.color = gA>=70?"var(--green)":gA>=thrPct()?"var(--amber)":"var(--red)";
+  drawGauge(G.after, G.before, thr);
+  $("sEffH").textContent="threshold 1 − 1/R₀ = "+pct(thr)+" at R₀ "+(S.r0/100).toFixed(2)+(g>0?("; whole country with gaps: "+pct(lastNat.before)+" → "+pct(lastNat.after)):"");
+  if(S.chSweep){ var sw=PL.sweep, parts=[];
+    $("sProd").textContent=Math.round(sw.prodReal);
+    if(S.collars) parts.push("starting at "+S.sweepProd);
+    else parts.push("without collars teams catch "+Math.round(sw.startAll)+" dogs a team-day at the start, only "+Math.round(sw.startNew)+" of them not yet vaccinated");
+    var tdAv=SWEEP_EFFORT*S.dogPop/1000, tdUse=sw.exhausted?sw.td*S.dogPop:tdAv;
+    parts.push(commas(tdUse)+" of "+commas(tdAv)+" team-days used"+(sw.exhausted?": every dog a team can meet is done":""));
+    $("sProdH").textContent=parts.join("; ");
+  } else { $("sProd").textContent="–"; $("sProdH").textContent="no sweeping teams"; }
+  drawCovMap();
+  drawOutMap(res.persist);
+  drawSeries(res.medSeries, res.samples, res.G, S.horizonYr);
+  var sn=$("surgeNote");
+  sn.innerHTML = (S.surge && g>0) ? ("Surge is on: the "+g+" gap district"+(g>1?"s are":" is")+" brought up to the full programme from year "+S.surgeYr+" onward and held there, so "+(g>1?"they clear":"it clears")+" despite showing red here.") : "";
+  $("covNote").textContent = (S.orvFrom>1) ? ("Coverage shown once oral bait has started (round "+S.orvFrom+"); before that it is "+pct(PL.sum.covPre)+".") : "";
+  updateCost();      // also writes the verdict, so money in it is always current
+}
+function updateCost(){
+  if(!lastRes||!lastPL) return;
+  var res=lastRes, PL=lastPL, G=lastGain, g=nGaps(), ne=res.elimYears.length, sm=0;
+  for(var q=0;q<ne;q++) sm+=costToYears(res.elimYears[q],S,PL,C,g);
+  var all=(sm+(S.runs-ne)*costToYears(S.horizonYr,S,PL,C,g,true))/S.runs;
+  $("sXCost").textContent=fmtMoney(all); $("sXCostH").textContent="runs that never eliminate pay for every round in the "+S.horizonYr+" years";
+  if(ne){ $("sCost").textContent=fmtMoney(sm/ne); $("sCostH").textContent="averaged over the "+ne+" runs that eliminated"; }
+  else { $("sCost").textContent="not reached"; $("sCostH").textContent="no run eliminated in the horizon"; }
+  var r4=costOfRound(3,S,PL,C,g);
+  $("sRound").textContent=fmtMoney(r4);
+  $("sRoundH").textContent="round 4"+(g>0?(", including "+g+" gap district"+(g>1?"s":"")):"")+"; "+fmtUnit(r4/S.dogPop)+" per dog in the country"+(S.orvFrom>1?("; "+fmtMoney(costOfRound(0,S,PL,C,g))+" in round 1, before oral bait"):"");
+  // channel table: one settled round, every district fully served
+  var orvOn=S.orvFrom>0, rc=roundCost(PL,C,S.collars,orvOn), Nd=S.dogPop, c=PL.sum, rows=[];
+  if(S.d2dHH>0) rows.push(["Door-to-door", c.dosesD2, rc.d2, G.d2]);
+  if(S.chSweep) rows.push(["Sweeping", c.newSw, rc.sw, G.sw]);
+  if(orvOn) rows.push(["Oral bait", c.takers, rc.orv, G.orv]);
+  var h='<tr><th>Channel, one settled round, all districts served</th><th>Dogs vaccinated</th><th>Cost per dog vaccinated</th><th>Effective immunity added</th><th>Cost per point of effective immunity</th></tr>';
+  var td=0, tc=0, te=0;
+  rows.forEach(function(r){ var dogs=r[1]*Nd, cost=r[2]*Nd, pts=r[3]; td+=dogs; tc+=cost; te+=pts;
+    var extra=(r[0]==="Oral bait")?' <span class="axisunit">('+fmtN(c.baits*Nd)+' baits)</span>':'';
+    h+='<tr><td>'+r[0]+'</td><td>'+fmtN(dogs)+extra+'</td><td>'+(dogs>0?fmtUnit(cost/dogs):'–')+'</td><td>'+pts.toFixed(1)+' pts</td><td>'+(pts>0.05?fmtMoney(cost/pts):'–')+'</td></tr>'; });
+  h+='<tr class="tot"><td>All channels</td><td>'+fmtN(td)+'</td><td>'+(td>0?fmtUnit(tc/td):'–')+'</td><td>'+te.toFixed(1)+' pts</td><td>'+(te>0.05?fmtMoney(tc/te):'–')+'</td></tr>';
+  if(!rows.length) h+='<tr><td colspan="5">No channel is switched on.</td></tr>';
+  $("chanTable").innerHTML=h;
+  $("rateNote").textContent="Shown in "+(CUR==='USD'?'US dollars':(CUR==='GBP'?'pounds sterling':'Sri Lankan rupees'))+".  US$1 = LKR 330.76 = £0.7555 (15 October 2026).  Costs for channels that are switched off have no effect.";
+  verdict();
+}
+function streetAdvice(orvOn){
+  if(!S.chSweep) return (S.d2dHH>0)?"add sweeping teams":"add door-to-door and sweeping teams";
+  var a="raise sweeping productivity (teams now achieve "+Math.round(lastPL.sweep.prodReal)+" new dogs a team-day)";
+  if(!S.collars) a+=", put collars back on";
+  if(!orvOn) a+=", or add oral bait";
+  return a;
+}
+function verdict(){
+  var res=lastRes, v=$("verdict"), t=TC(), g=nGaps(), c=lastPL.sum, G=lastGain, orvOn=S.orvFrom>0, msg, bg, col;
+  var ep=Math.round(res.elimProb*100), thr=1-100/S.r0, tYr=(res.t80!=null?res.t80:res.medTime);
+  var cov=roundCovAll(lastPL), roam=orvOn?c.roamPost:c.roamPre, R0=S.r0/100, Ra=R0*(1-G.after);
+  var toMap=(MAPMODE==='cov')?"  Switch the map to effective immunity to see the difference between the report and the dogs.":"";
+  if(S.eff===0 && cov>0){
+    msg="A placebo protects no dog.  Teams still vaccinate "+pct(cov)+" of dogs and every round is paid for, so the coverage map looks just as it does with a real vaccine, but effective immunity is zero and rabies keeps circulating everywhere."+(MAPMODE==='cov'?"  Switch the map to effective immunity to see it.":"");
+    bg="rgba(226,75,74,.12)"; col=t.bad; }
+  else if(g===0 && ep>=80){
+    msg="The programme reaches the dogs that matter: every district clears and the country eliminates in about "+(tYr!=null?tYr.toFixed(1):"–")+" years for four runs in five, at an expected cost of "+$("sXCost").textContent+"."; bg="rgba(95,160,35,.13)"; col=t.good; }
+  else if(S.surge && g>0 && ep>=80){
+    msg="Surge closed the gap"+(g>1?"s":"")+": once the last reservoir clears, the whole map follows &#8211; elimination in about "+(tYr!=null?tYr.toFixed(1):"–")+" years for four runs in five, at an expected cost of "+$("sXCost").textContent+"."; bg="rgba(95,160,35,.13)"; col=t.good; }
+  else if(g>0 && ep<40){
+    msg=g+" refusing district"+(g>1?"s":"")+" re-seed"+(g>1?"":"s")+" the country: rabies keeps circulating and elimination probability is only "+ep+"%.  Surge the gap"+(g>1?"s":"")+", or raise "+(g>1?"their":"its")+" coverage above the threshold."; bg="rgba(226,75,74,.12)"; col=t.bad; }
+  else if(g>0){
+    msg=g+" refusing district"+(g>1?"s":"")+" hold"+(g>1?"":"s")+" elimination probability to "+ep+"%.  The country is not free until the last one clears."; bg="rgba(200,136,28,.14)"; col=t.warn; }
+  else {
+    var why;
+    if(!(cov>0)) why="No channel is vaccinating any dogs.";
+    else if(Ra>=1){
+      var cause;
+      if(roam<0.6) cause="only "+pct(roam)+" of street dogs are reached (coverage of all dogs is "+pct(cov)+"): "+streetAdvice(orvOn)+".";
+      else if(S.d2dHH<50) cause="household dogs are largely left out, and they carry about a sixth of transmission: add door-to-door.";
+      else cause="street dogs are reached ("+pct(roam)+"), but the vaccine protects too few of the dogs it reaches (efficacy "+S.eff+"%"+(orvOn?"; a bait protects less than an injection":"")+")."+toMap;
+      why="Even just after a round, effective immunity is "+pct(G.after)+", below the threshold of "+pct(thr)+", so rabies grows all year round.  Why: "+cause;
+    } else {
+      var lead=(lastRbar>=1)
+        ? ("Effective immunity clears the threshold ("+pct(thr)+") just after each round, at "+pct(G.after)+", but falls to "+pct(G.before)+" before the next, and over the year rabies holds its ground.")
+        : ("Rabies declines, but slowly: effective immunity rises to "+pct(G.after)+" after each round and falls to "+pct(G.before)+" before the next, against a threshold of "+pct(thr)+", so the country does not clear reliably within "+S.horizonYr+" years.");
+      var fixes=[];
+      if(S.eff<80) fixes.push("use a vaccine that protects more of the dogs it reaches (efficacy now "+S.eff+"%)");
+      if(roam<0.85) fixes.push("reach more street dogs to lift the whole cycle: "+streetAdvice(orvOn));
+      if(S.durYr<3) fixes.push("use a vaccine with longer protection (now "+S.durYr+" yr)");
+      if(S.intervalYr>1) fixes.push("run rounds more often (now every "+S.intervalYr+" years)");
+      if(!fixes.length) fixes.push("run rounds more often, or push street-dog reach higher still");
+      why=lead+"  To fix it: "+fixes.join("; ")+".";
+    }
+    msg="Elimination probability "+ep+"%.  "+why;
+    bg=ep>=40?"rgba(200,136,28,.14)":"rgba(226,75,74,.12)"; col=ep>=40?t.warn:t.bad; }
+  v.innerHTML=msg; v.style.background=bg; v.style.color=col;
+}
+
+// ---- costs and currency ----
+var CKEYS=['vac','collar','d2dDel','sweepTD','bait'];
+function showCosts(){ CKEYS.forEach(function(k){ var v=toCur(C[k]); $("c_"+k).value=(CUR==='LKR'?Math.round(v*100)/100:Math.round(v*100)/100); }); }
+function setCur(v){ CUR=v; showCosts(); updateCost(); }
+function resetCosts(){ C=JSON.parse(JSON.stringify(COST0)); showCosts(); updateCost(); }
+
+// ---- gaps and grid ----
+function clearPresetHi(){ var bs=document.querySelectorAll("#presets button"); for(var b=0;b<bs.length;b++)bs[b].classList.remove("on"); }
+function toggle(i){ if(S.gaps[i])delete S.gaps[i]; else S.gaps[i]=1; curPreset=null; clearPresetHi(); drawCovMap(); schedule(); }
+function clearGaps(){ S.gaps={}; curPreset=null; clearPresetHi(); drawCovMap(); compute(); }
+function quickN(n){ setN(n); }
+function setN(n){ n=Math.max(4,Math.min(400,Math.round(n||0))); S.N=n; buildGrid(n);
+  if(curPreset && PRESETS[curPreset]){ S.gaps={}; PRESETS[curPreset].gapsFn().forEach(function(i){ S.gaps[i]=1; }); }
+  else { for(var k in S.gaps){ if(+k>=NP) delete S.gaps[k]; } }
+  $("ndist").value=n;
+  $("setupNote").textContent = (n===25 ? "= Sri Lanka's 25 administrative districts" : (n===331 ? "= Sri Lanka's 331 DS (divisional) divisions" : ""));
+  syncParams(); drawCovMap(); compute();
+}
+
+// ---- presets ----
+var EPI={eff:95,rho:15,turn:45,r0:180,durYr:3,intervalYr:1,campWk:4,rolloutWk:4};
+var PRESETS={
+  ndlb:  { label:"NDLB plan",            d2dHH:100, chSweep:true,  sweepProd:100, orvFrom:0, collars:true, pups:true, chStatic:false, surge:false, gapsFn:function(){ return []; } },
+  d2d:   { label:"Door-to-door only",    d2dHH:100, chSweep:false, sweepProd:100, orvFrom:0, collars:true, pups:true, chStatic:false, surge:false, gapsFn:function(){ return []; } },
+  slow:  { label:"Slow sweeping teams",  d2dHH:100, chSweep:true,  sweepProd:40,  orvFrom:0, collars:true, pups:true, chStatic:false, surge:false, gapsFn:function(){ return []; } },
+  onegap:{ label:"One refusing district",d2dHH:100, chSweep:true,  sweepProd:100, orvFrom:0, collars:true, pups:true, chStatic:false, surge:false, gapsFn:function(){ return [centreIdx()]; } },
+  patchy:{ label:"Patchy national",      d2dHH:100, chSweep:true,  sweepProd:100, orvFrom:0, collars:true, pups:true, chStatic:false, surge:false, gapCov:12, gapsFn:function(){ return scatterGaps(0.12); } },
+  surge: { label:"Surge the gap",        d2dHH:100, chSweep:true,  sweepProd:100, orvFrom:0, collars:true, pups:true, chStatic:false, surge:true, surgeYr:1, gapsFn:function(){ return [centreIdx()]; } }
+};
+function applyPreset(key){ var p=PRESETS[key]; curPreset=key;
+  $("d2dHH").value=p.d2dHH; $("chSweep").checked=p.chSweep; $("sweepProd").value=p.sweepProd; $("orvFrom").value=p.orvFrom;
+  $("collars").checked=p.collars; $("pups").checked=p.pups;
+  $("gapCov").value=p.gapCov||10; $("surge").checked=!!p.surge; $("surgeYr").value=p.surgeYr||1;
+  $("eff").value=EPI.eff; $("rho").value=EPI.rho; $("turn").value=EPI.turn; $("r0").value=EPI.r0; $("dur").value=EPI.durYr;
+  $("intv").value=EPI.intervalYr; $("campwk").value=EPI.campWk; $("roll").value=EPI.rolloutWk;
+  S.gaps={}; p.gapsFn().forEach(function(i){ S.gaps[i]=1; });
+  syncParams(); compute();
+  var bs=document.querySelectorAll("#presets button"); for(var b=0;b<bs.length;b++)bs[b].classList.toggle("on", bs[b].dataset.k===key);
+}
+function buildPresets(){ var html="";
+  for(var k in PRESETS){ html+='<button data-k="'+k+'" onclick="applyPreset(\''+k+'\')">'+PRESETS[k].label+'</button>'; }
+  $("presets").innerHTML=html;
+}
+
+// ---- wire ----
+["d2dHH","sweepProd","gapCov","eff","dur","intv","campwk","roll","rho","turn","r0","surgeYr","wan","runs"].forEach(function(id){
+  $(id).addEventListener("input", function(){ syncParams(); if(id==="gapCov") drawCovMap(); schedule(); }); });
+["chSweep","collars","pups","surge"].forEach(function(id){ $(id).addEventListener("change", function(){ syncParams(); schedule(); }); });
+$("orvFrom").addEventListener("change", function(){ syncParams(); schedule(); });
+$("seedIn").addEventListener("input", function(){ syncParams(); schedule(); });
+function newSeed(){ $("seedIn").value=Math.floor(Math.random()*1e6)+1; syncParams(); compute(); }
+$("ndist").addEventListener("change", function(){ setN(+$("ndist").value); });
+$("dogPop").addEventListener("change", function(){ var v=parseNum($("dogPop").value); if(v>0)S.dogPop=v; $("dogPop").value=commas(S.dogPop); syncParams(); compute(); });
+$("cur").addEventListener("change", function(){ setCur($("cur").value); });
+CKEYS.forEach(function(k){ $("c_"+k).addEventListener("input", function(){ var v=parseFloat($("c_"+k).value); if(isFinite(v)&&v>=0){ C[k]=fromCur(v); updateCost(); } }); });
+function toggleTheme(){ var d=document.documentElement.classList.toggle("dark"); $("themeBtn").textContent=d?"Light mode":"Dark mode"; drawDogs(); render(); }
+
+buildPresets();
+$("ndist").value=S.N; $("dogPop").value=commas(S.dogPop); $("setupNote").textContent="= Sri Lanka's 25 administrative districts";
+$("wan").value=S.waning; $("runs").value=S.runs; $("seedIn").value=S.seed; $("cur").value=CUR;
+showCosts(); drawDogs();
+applyPreset("ndlb");
+</script>
+</body>
+</html>
