@@ -1,0 +1,36 @@
+{
+ "drive_folder_id": "1CtdlU_Ox5yX96jrYJZoXCmNJcugA31bH",
+ "drive_folder_url": "https://drive.google.com/drive/folders/1CtdlU_Ox5yX96jrYJZoXCmNJcugA31bH",
+ "encrypted": false,
+ "files": {
+  "photobook_ALL.pdf": {
+   "bytes": 45744919,
+   "dogs": 80,
+   "id": "1hDnCftpNTUlN7QBhGUk9-6rAQjhK312x",
+   "roster": "2026-10-18",
+   "sha256": "8d37a11d7c9967402accd12935a0b3346443d4e54ad899992680d227b9e86a5a",
+   "url": "https://drive.google.com/file/d/1hDnCftpNTUlN7QBhGUk9-6rAQjhK312x/view"
+  },
+  "sites/photobook_NAR.pdf": {
+   "bytes": 24331761,
+   "dogs": 40,
+   "id": "1GqpTSRuLRAdf-3QgaXC7w2yTh1c0hsw3",
+   "roster": "2026-10-18",
+   "sha256": "58524286fb007470cb2eca1ca9dada17ad905423be5c36b2f86c5097f77e40a0",
+   "url": "https://drive.google.com/file/d/1GqpTSRuLRAdf-3QgaXC7w2yTh1c0hsw3/view"
+  },
+  "sites/photobook_NAU.pdf": {
+   "bytes": 21415140,
+   "dogs": 40,
+   "id": "1yi8_yJJVvPx_AUxFvFtHTrDjjTDYKWOX",
+   "roster": "2026-10-17",
+   "sha256": "7ee91290c0fe716c8a0f240b01f5c450bf4b7c70d1b548e67c17c8f36f8020b9",
+   "url": "https://drive.google.com/file/d/1yi8_yJJVvPx_AUxFvFtHTrDjjTDYKWOX/view"
+  }
+ },
+ "sites": [
+  "NAR",
+  "NAU"
+ ],
+ "updated": "2026-10-19 05:54 UTC"
+}
