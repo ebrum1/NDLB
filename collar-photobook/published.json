@@ -3,6 +3,30 @@
  "drive_folder_url": "https://drive.google.com/drive/folders/1CtdlU_Ox5yX96jrYJZoXCmNJcugA31bH",
  "encrypted": false,
  "files": {
+  "maps/collar_dogs_ALL.kml": {
+   "bytes": 40742,
+   "dogs": 80,
+   "id": "1FjYo996VAGpVu3BBFTcdrXrL_HG0b0z1",
+   "roster": "2026-10-18",
+   "sha256": "b65ca3c104ded4b529498e51f1bff002d0b95b57aa73929e80b7b0bb7ad8676b",
+   "url": "https://drive.google.com/file/d/1FjYo996VAGpVu3BBFTcdrXrL_HG0b0z1/view"
+  },
+  "maps/collar_dogs_NAR.kml": {
+   "bytes": 21149,
+   "dogs": 40,
+   "id": "1Li-EC1q2X_hX6JBcDnetqgZh2Ba3QTvP",
+   "roster": "2026-10-18",
+   "sha256": "301dee8a65989c390e4854544418f130c5436a9311910ab1926f86e791b85abd",
+   "url": "https://drive.google.com/file/d/1Li-EC1q2X_hX6JBcDnetqgZh2Ba3QTvP/view"
+  },
+  "maps/collar_dogs_NAU.kml": {
+   "bytes": 20856,
+   "dogs": 40,
+   "id": "1B9hDqjJMoxV8QF1Fkc-2jV9NR8VsjhLn",
+   "roster": "2026-10-17",
+   "sha256": "24eea35761eaa223709428e4e1a696311e18fb981d9a07807a148dea580db0e2",
+   "url": "https://drive.google.com/file/d/1B9hDqjJMoxV8QF1Fkc-2jV9NR8VsjhLn/view"
+  },
   "photobook_ALL.pdf": {
    "bytes": 45744919,
    "dogs": 80,
@@ -28,9 +52,10 @@
    "url": "https://drive.google.com/file/d/1yi8_yJJVvPx_AUxFvFtHTrDjjTDYKWOX/view"
   }
  },
+ "map": true,
  "sites": [
   "NAR",
   "NAU"
  ],
- "updated": "2026-10-19 05:54 UTC"
+ "updated": "2026-10-19 06:23 UTC"
 }
