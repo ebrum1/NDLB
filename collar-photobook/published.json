@@ -4,11 +4,11 @@
  "encrypted": false,
  "files": {
   "maps/collar_dogs_ALL.kml": {
-   "bytes": 44825,
-   "dogs": 88,
+   "bytes": 59747,
+   "dogs": 119,
    "id": "1FjYo996VAGpVu3BBFTcdrXrL_HG0b0z1",
    "roster": "2026-10-19",
-   "sha256": "197bf47ed85a04de7971242ae0b77200f5beb059ca4e1d5767e4d77ee5d85cab",
+   "sha256": "a95d1f00a4c683b3cb80e541357e33823d7199ce4a10bf9ce83e2ba885711f84",
    "url": "https://drive.google.com/file/d/1FjYo996VAGpVu3BBFTcdrXrL_HG0b0z1/view"
   },
   "maps/collar_dogs_NAR.kml": {
@@ -28,19 +28,19 @@
    "url": "https://drive.google.com/file/d/1B9hDqjJMoxV8QF1Fkc-2jV9NR8VsjhLn/view"
   },
   "maps/collar_dogs_PAU.kml": {
-   "bytes": 5347,
-   "dogs": 8,
+   "bytes": 20269,
+   "dogs": 39,
    "id": "1sVmMIEmSpLGr2DiaVikyFJEmZ5V9701o",
    "roster": "2026-10-19",
-   "sha256": "62eb81a017ff49badd8fd6e9428c8e210049dcf7b5cda70f8b06ea9ada973a59",
+   "sha256": "d07fb083f5666beeba9241d0a81f95cc1f735ac11521e33a92122f46996e0fa9",
    "url": "https://drive.google.com/file/d/1sVmMIEmSpLGr2DiaVikyFJEmZ5V9701o/view"
   },
   "photobook_ALL.pdf": {
-   "bytes": 50775527,
-   "dogs": 88,
+   "bytes": 72120694,
+   "dogs": 119,
    "id": "1hDnCftpNTUlN7QBhGUk9-6rAQjhK312x",
    "roster": "2026-10-19",
-   "sha256": "c5a3cf85892318d0d20f642948b0923ac3a79258acbc8becfe3680b4c54cfa1e",
+   "sha256": "594aee57741487f3624d08af79f778d653e4c9802d6aef33cc02c67bf0dd6e88",
    "url": "https://drive.google.com/file/d/1hDnCftpNTUlN7QBhGUk9-6rAQjhK312x/view"
   },
   "sites/photobook_NAR.pdf": {
@@ -60,11 +60,11 @@
    "url": "https://drive.google.com/file/d/1yi8_yJJVvPx_AUxFvFtHTrDjjTDYKWOX/view"
   },
   "sites/photobook_PAU.pdf": {
-   "bytes": 4821938,
-   "dogs": 8,
+   "bytes": 26167045,
+   "dogs": 39,
    "id": "1Thkefhvhs9ShPa9OpNOfWJkhqfDlbCGj",
    "roster": "2026-10-19",
-   "sha256": "34cbf6694e1a4e5480a090deca7f12c33ae8dbbf41050f6c0d6082452d260842",
+   "sha256": "5a27d275c6afa73ab1da0ba1f402229d340ef8535a36b961128ce64963e38657",
    "url": "https://drive.google.com/file/d/1Thkefhvhs9ShPa9OpNOfWJkhqfDlbCGj/view"
   }
  },
@@ -74,5 +74,5 @@
   "NAU",
   "PAU"
  ],
- "updated": "2026-10-19 20:41 UTC"
+ "updated": "2026-10-29 20:31 UTC"
 }
