@@ -4,11 +4,11 @@
  "encrypted": false,
  "files": {
   "maps/collar_dogs_ALL.kml": {
-   "bytes": 97835,
-   "dogs": 199,
+   "bytes": 116942,
+   "dogs": 239,
    "id": "1FjYo996VAGpVu3BBFTcdrXrL_HG0b0z1",
-   "roster": "2026-11-03",
-   "sha256": "f3a9de2eaf0fad1fe39ad935953d687ac89ef7041c719c91fcf20040a3127daa",
+   "roster": "2026-11-04",
+   "sha256": "3ad7884052b219c3ba79adfe03c81257350f722312774f7cc901ee453e00b2e0",
    "url": "https://drive.google.com/file/d/1FjYo996VAGpVu3BBFTcdrXrL_HG0b0z1/view"
   },
   "maps/collar_dogs_HOR.kml": {
@@ -26,6 +26,14 @@
    "roster": "2026-11-03",
    "sha256": "1be3289d434b67d0ac3637a113d6019129cffe249d75a5b00395c861d4d0219f",
    "url": "https://drive.google.com/file/d/123UCtjWv6s30XJm2gvT3673VBWzkwgum/view"
+  },
+  "maps/collar_dogs_HRR.kml": {
+   "bytes": 20356,
+   "dogs": 40,
+   "id": "1giiyoIStEXEMK4zo7C-qxZy0oRw0sXgp",
+   "roster": "2026-11-04",
+   "sha256": "3129879701bb67252b9470b877fd4533e0ea5d43da9a2b88e0321df7f0e78ef8",
+   "url": "https://drive.google.com/file/d/1giiyoIStEXEMK4zo7C-qxZy0oRw0sXgp/view"
   },
   "maps/collar_dogs_NAR.kml": {
    "bytes": 21149,
@@ -52,11 +60,11 @@
    "url": "https://drive.google.com/file/d/1sVmMIEmSpLGr2DiaVikyFJEmZ5V9701o/view"
   },
   "photobook_ALL.pdf": {
-   "bytes": 116412697,
-   "dogs": 199,
+   "bytes": 143411389,
+   "dogs": 239,
    "id": "1hDnCftpNTUlN7QBhGUk9-6rAQjhK312x",
-   "roster": "2026-11-03",
-   "sha256": "98be5f4eb8e1ad8f3de72fd236d947f1bec0e78f6146c71bfad604d848fe0912",
+   "roster": "2026-11-04",
+   "sha256": "a88c6b02b52c516d4200ffba3bdfd06a7ed2a26c23e4090680eecfd75789ca18",
    "url": "https://drive.google.com/file/d/1hDnCftpNTUlN7QBhGUk9-6rAQjhK312x/view"
   },
   "sites/photobook_HOR.pdf": {
@@ -74,6 +82,14 @@
    "roster": "2026-11-03",
    "sha256": "9dfcca670f8c7dadafbe1130a90be5c17bb9977a9b76ad8d3817565d2ef9098c",
    "url": "https://drive.google.com/file/d/1NCNHnMQ0iI_1wiTSz1mfW_DMWlXywniK/view"
+  },
+  "sites/photobook_HRR.pdf": {
+   "bytes": 26999708,
+   "dogs": 40,
+   "id": "1Hl5OXYiq-fPdAfMLNsW97HNalJW2g_vq",
+   "roster": "2026-11-04",
+   "sha256": "eb304021de9d4edb0ab7166af0050d7095c686d30ddd1a5914d4c6b5b98089af",
+   "url": "https://drive.google.com/file/d/1Hl5OXYiq-fPdAfMLNsW97HNalJW2g_vq/view"
   },
   "sites/photobook_NAR.pdf": {
    "bytes": 24331761,
@@ -104,9 +120,10 @@
  "sites": [
   "HOR",
   "HOU",
+  "HRR",
   "NAR",
   "NAU",
   "PAU"
  ],
- "updated": "2026-11-03 10:29 UTC"
+ "updated": "2026-11-04 21:27 UTC"
 }
