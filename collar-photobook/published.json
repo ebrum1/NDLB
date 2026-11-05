@@ -4,11 +4,11 @@
  "encrypted": false,
  "files": {
   "maps/collar_dogs_ALL.kml": {
-   "bytes": 116942,
-   "dogs": 239,
+   "bytes": 136115,
+   "dogs": 279,
    "id": "1FjYo996VAGpVu3BBFTcdrXrL_HG0b0z1",
-   "roster": "2026-11-04",
-   "sha256": "3ad7884052b219c3ba79adfe03c81257350f722312774f7cc901ee453e00b2e0",
+   "roster": "2026-11-05",
+   "sha256": "fda9a414ac49d15d30ec1d7651aa27fbfb38469ed9bfc4d537cd73643421aaf7",
    "url": "https://drive.google.com/file/d/1FjYo996VAGpVu3BBFTcdrXrL_HG0b0z1/view"
   },
   "maps/collar_dogs_HOR.kml": {
@@ -51,6 +51,14 @@
    "sha256": "5ce563240fbd5a7ae8a8b24b09533f50ad4a378f555f2d294a2478e078eca4ec",
    "url": "https://drive.google.com/file/d/1B9hDqjJMoxV8QF1Fkc-2jV9NR8VsjhLn/view"
   },
+  "maps/collar_dogs_PAR.kml": {
+   "bytes": 20423,
+   "dogs": 40,
+   "id": "1FVr3vHXweroZoh9d3IGZ7CvKWEFzMJYu",
+   "roster": "2026-11-05",
+   "sha256": "bddda767f83677f3b9409aa2169a54facea2b8828274891325e9804681768f9a",
+   "url": "https://drive.google.com/file/d/1FVr3vHXweroZoh9d3IGZ7CvKWEFzMJYu/view"
+  },
   "maps/collar_dogs_PAU.kml": {
    "bytes": 20269,
    "dogs": 39,
@@ -60,11 +68,11 @@
    "url": "https://drive.google.com/file/d/1sVmMIEmSpLGr2DiaVikyFJEmZ5V9701o/view"
   },
   "photobook_ALL.pdf": {
-   "bytes": 143411389,
-   "dogs": 239,
+   "bytes": 172878056,
+   "dogs": 279,
    "id": "1hDnCftpNTUlN7QBhGUk9-6rAQjhK312x",
-   "roster": "2026-11-04",
-   "sha256": "a88c6b02b52c516d4200ffba3bdfd06a7ed2a26c23e4090680eecfd75789ca18",
+   "roster": "2026-11-05",
+   "sha256": "c7c42ab9c6a2da96954e33d619d9229100bf2452cb97f44eb433e874d37613b7",
    "url": "https://drive.google.com/file/d/1hDnCftpNTUlN7QBhGUk9-6rAQjhK312x/view"
   },
   "sites/photobook_HOR.pdf": {
@@ -107,6 +115,14 @@
    "sha256": "a6e7023a743efc8d8550e74ca66d3bbc4f636192cc3153fea67212766176e0d0",
    "url": "https://drive.google.com/file/d/1yi8_yJJVvPx_AUxFvFtHTrDjjTDYKWOX/view"
   },
+  "sites/photobook_PAR.pdf": {
+   "bytes": 29468020,
+   "dogs": 40,
+   "id": "1vFJR0I-grIfg0aUTCYqXYFRsDwyL0dPg",
+   "roster": "2026-11-05",
+   "sha256": "b7db7edfcf36589aec9218618cc78b8f9b12ffd73fdafaacde938f0d358eaa0f",
+   "url": "https://drive.google.com/file/d/1vFJR0I-grIfg0aUTCYqXYFRsDwyL0dPg/view"
+  },
   "sites/photobook_PAU.pdf": {
    "bytes": 26167045,
    "dogs": 39,
@@ -123,7 +139,8 @@
   "HRR",
   "NAR",
   "NAU",
+  "PAR",
   "PAU"
  ],
- "updated": "2026-11-04 21:27 UTC"
+ "updated": "2026-11-05 21:34 UTC"
 }
